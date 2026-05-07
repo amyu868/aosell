@@ -621,6 +621,21 @@ async function callAI(prompt,maxTok=1200){
   const provider=cfg.provider||'minimax';
   const model=cfg.model||'MiniMax-Text-01';
   let url,headers,body;
+
+  // 自定义模式：通过 Worker 代理
+  if(provider==='custom' && cfg.customUrl){
+    url=cfg.customUrl;
+    headers={'Content-Type':'application/json','X-Access-Password':cfg.key};
+    body=JSON.stringify({model,messages:[{role:'user',content:prompt}],max_tokens:maxTok});
+    try{
+      const r=await fetch(url,{method:'POST',headers,body});
+      const d=await r.json();
+      if(d.error){console.error('Worker error:',d.error);return '';}
+      return d.content?.[0]?.text||d.choices?.[0]?.message?.content||'';
+    }catch(e){console.error(e);return '';}
+  }
+
+  // MiniMax 直连
   if(provider==='minimax'){
     url='https://api.minimaxi.com/v1/text/chatcompletion_v2';
     headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`};
@@ -630,7 +645,7 @@ async function callAI(prompt,maxTok=1200){
     headers={'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01'};
     body=JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content:prompt}]});
   }else{
-    url=provider==='openai'?'https://api.openai.com/v1/chat/completions':(cfg.customUrl||'');
+    url='https://api.openai.com/v1/chat/completions';
     headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`};
     body=JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content:prompt}]});
   }
@@ -638,6 +653,7 @@ async function callAI(prompt,maxTok=1200){
     const r=await fetch(url,{method:'POST',headers,body});
     const d=await r.json();
     if(provider==='anthropic')return d.content?.[0]?.text||'';
+    if(provider==='minimax')return d.choices?.[0]?.message?.content||'';
     return d.choices?.[0]?.message?.content||'';
   }catch(e){console.error(e);return '';}
 }
