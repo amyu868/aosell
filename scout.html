@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon Scout v3.2 · 智能选品系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f5;
+  --s1:#ffffff;
+  --s2:#f7f8fa;
+  --s3:#eef0f4;
+  --b1:#e2e6ed;
+  --b2:#cdd2db;
+  --accent:#e8460a;
+  --gold:#d4820a;
+  --green:#0a8a4a;
+  --red:#d4192e;
+  --blue:#1a5fd4;
+  --cyan:#0891b2;
+  --t1:#1a1f2e;
+  --t2:#4a5568;
+  --t3:#94a3b8;
+  --us:#1a5fd4;
+  --ca:#d4192e;
+  --uk:#7c3aed;
+  --d1:#0a8a4a;
+  --d2:#d4650a;
+  --d3:#c4900a;
+  --d4:#0891b2;
+  --d5:#d4192e;
+  --d6:#7c3aed;
+  --d7:#1a5fd4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',sans-serif;font-size:13px;overflow:hidden;height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.app{display:grid;grid-template-rows:48px 1fr;height:100vh}
+.nav{background:var(--s1);border-bottom:1px solid var(--b1);box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100;flex-shrink:0}
+.body{display:grid;grid-template-columns:256px 1fr 330px;height:calc(100vh - 48px);overflow:hidden}
+.brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.brand-ico{width:28px;height:28px;background:var(--accent);border-radius:6px;display:grid;place-items:center;font-size:15px}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px}
+.brand-v{background:var(--accent);color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:2px}
+.nav-phases{flex:1;display:flex;align-items:center;justify-content:center;gap:4px}
+.ph{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:4px;font-size:10px;color:var(--t3);border:1px solid transparent;transition:.2s}
+.ph.active{color:var(--accent);border-color:rgba(255,87,34,.3);background:rgba(255,87,34,.08)}
+.ph.done{color:var(--green);border-color:rgba(0,230,118,.15);background:rgba(0,230,118,.05)}
+.ph-n{width:15px;height:15px;border-radius:50%;background:var(--b1);font-size:9px;display:grid;place-items:center;font-family:'Space Mono',monospace;flex-shrink:0}
+.ph.active .ph-n{background:var(--accent);color:#fff}
+.ph.done .ph-n{background:var(--green);color:#000}
+.ph-arr{color:var(--b2);font-size:9px;margin:0 2px}
+.nav-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+.stag{padding:3px 8px;border-radius:4px;font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;border:1px solid;transition:.15s;user-select:none;flex-shrink:0}
+.stag.us{color:var(--us);border-color:rgba(41,121,255,.35);background:rgba(41,121,255,.08)}
+.stag.ca{color:var(--ca);border-color:rgba(255,23,68,.35);background:rgba(255,23,68,.08)}
+.stag.uk{color:var(--uk);border-color:rgba(170,0,255,.35);background:rgba(170,0,255,.08)}
+.stag.off{opacity:.25;filter:grayscale(1)}
+.mcp-pill{display:flex;align-items:center;gap:5px;padding:3px 9px;background:var(--s2);border:1px solid var(--b1);border-radius:5px;font-size:10px;color:var(--t3);cursor:pointer;white-space:nowrap}
+.mcp-dot{width:5px;height:5px;border-radius:50%;background:var(--t3);flex-shrink:0}
+.mcp-dot.on{background:var(--green);box-shadow:0 0 4px var(--green)}
+
+/* LEFT */
+.left{background:var(--s1);border-right:1px solid var(--b1);box-shadow:1px 0 4px rgba(0,0,0,.04);display:flex;flex-direction:column;overflow:hidden}
+.left-scroll{flex:1;overflow-y:auto;padding:12px 12px 8px}
+.sec{margin-bottom:14px}
+.sec-hd{font-size:10px;text-transform:uppercase;letter-spacing:1.6px;color:var(--t3);font-family:'Space Mono',monospace;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-hd-line{flex:1;height:1px;background:var(--b1)}
+
+/* Category checklist */
+.cat-actions{display:flex;gap:5px;margin-bottom:8px;align-items:center}
+.cat-act-btn{padding:4px 8px;background:var(--s2);border:1px solid var(--b1);border-radius:4px;font-size:10px;color:var(--t2);cursor:pointer;text-align:center;transition:.15s;font-family:'Noto Sans SC',sans-serif;white-space:nowrap}
+.cat-act-btn:hover{border-color:var(--accent);color:var(--accent)}
+.cat-count-pill{padding:3px 8px;background:rgba(255,87,34,.08);border:1px solid rgba(255,87,34,.25);border-radius:10px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;white-space:nowrap;flex-shrink:0}
+.cat-list{display:flex;flex-direction:column;gap:2px}
+.cat-item{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:5px;cursor:pointer;transition:.15s;user-select:none;border:1px solid transparent}
+.cat-item:hover{background:var(--s2);border-color:var(--b1)}
+.cat-item.on{background:rgba(255,87,34,.06);border-color:rgba(255,87,34,.3)}
+.cat-cb{width:14px;height:14px;border:1.5px solid var(--b2);border-radius:3px;display:grid;place-items:center;flex-shrink:0;background:var(--s3);font-size:9px;color:transparent;transition:.15s}
+.cat-item.on .cat-cb{background:var(--accent);border-color:var(--accent);color:#fff}
+.cat-ico{font-size:12px;flex-shrink:0}
+.cat-name{font-size:11px;color:var(--t2);flex:1;transition:.15s;line-height:1.3}
+.cat-item.on .cat-name{color:var(--t1);font-weight:500}
+
+/* Weights */
+.dim-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.dim-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dim-name{font-size:11px;color:var(--t2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+input[type=range]{-webkit-appearance:none;height:2px;border-radius:1px;outline:none;width:64px;padding:0;border:none;flex-shrink:0;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;cursor:pointer}
+.dim-val{font-family:'Space Mono',monospace;font-size:10px;width:12px;text-align:right;flex-shrink:0}
+
+/* Prefs */
+.pg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px}
+.pf{display:flex;flex-direction:column;gap:3px}
+.pf label{font-size:10px;color:var(--t3)}
+input[type=number],select{background:var(--s2);border:1px solid var(--b1);border-radius:5px;color:var(--t1);padding:5px 8px;font-size:12px;font-family:'Noto Sans SC',sans-serif;width:100%;outline:none;transition:.15s}
+input[type=number]:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--s1);color:var(--t1)}
+.chk{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);cursor:pointer;margin-bottom:5px}
+.chk input{width:auto;cursor:pointer;accent-color:var(--accent)}
+
+/* Bottom actions */
+.disc-wrap{padding:10px 12px;border-top:1px solid var(--b1);flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.disc-btn{padding:11px;background:linear-gradient(135deg,var(--accent),#f97316);border:none;border-radius:7px;color:#fff;font-size:13px;font-weight:600;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;width:100%}
+.disc-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.disc-btn:active{transform:translateY(0)}
+.disc-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.reset-btn{padding:6px;background:transparent;border:1px solid var(--b1);border-radius:6px;color:var(--t3);font-size:11px;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:5px;width:100%}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* CENTER */
+.center{display:flex;flex-direction:column;overflow:hidden}
+.cbar{background:var(--s1);border-bottom:1px solid var(--b1);padding:7px 10px;display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:nowrap}
+.fchip{padding:3px 8px;border-radius:20px;font-size:11px;cursor:pointer;color:var(--t3);border:1px solid var(--b1);background:var(--s2);transition:.15s;white-space:nowrap;flex-shrink:0}
+.fchip:hover,.fchip.on{border-color:var(--accent);color:var(--accent);background:rgba(255,87,34,.08)}
+.cbar-sep{width:1px;height:14px;background:var(--b1);flex-shrink:0}
+.sort-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.sort-lbl{font-size:10px;color:var(--t3);white-space:nowrap}
+.sort-sel{background:var(--s2);border:1px solid var(--b1);border-radius:4px;color:var(--t1);padding:3px 4px;font-size:10px;font-family:'Noto Sans SC',sans-serif;outline:none;cursor:pointer;width:76px}
+.cbar-right{margin-left:auto;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.res-count{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace;white-space:nowrap}
+.cmp-btn{padding:3px 7px;background:var(--s2);border:1px solid var(--b1);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;transition:.15s;white-space:nowrap}
+.cmp-btn:hover,.cmp-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06)}
+.exp-btn{padding:3px 7px;background:var(--s2);border:1px solid var(--b1);border-radius:4px;color:var(--t2);font-size:10px;cursor:pointer;transition:.15s;white-space:nowrap;display:flex;align-items:center;gap:3px}
+.exp-btn:hover{border-color:var(--green);color:var(--green)}
+.cbody{flex:1;overflow-y:auto;padding:10px 12px}
+
+/* KCARD */
+.kcard{background:var(--s1);border:1px solid var(--b1);box-shadow:0 1px 3px rgba(0,0,0,.05);border-radius:9px;margin-bottom:7px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.kcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:9px 0 0 9px}
+.kcard.grade-S::before{background:var(--green)}
+.kcard.grade-A::before{background:var(--blue)}
+.kcard.grade-B::before{background:var(--gold)}
+.kcard.grade-C::before,.kcard.grade-D::before{background:var(--red)}
+.kcard:hover{border-color:var(--b2);background:var(--s3)}
+.kcard.selected{border-color:rgba(255,87,34,.5);background:rgba(255,87,34,.04)}
+.kcard.compare-pick{border-color:rgba(0,229,255,.5);background:rgba(0,229,255,.04)}
+.kc-top{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 12px 6px}
+.kc-kw{font-size:13px;font-weight:500;margin-bottom:2px}
+.kc-kw-zh{font-size:10px;color:var(--t3);margin-bottom:5px}
+.kc-meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.kmt{font-size:10px;color:var(--t3);display:flex;align-items:center;gap:2px;white-space:nowrap}
+.sdot{width:5px;height:5px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sdot.us{background:var(--us)}.sdot.ca{background:var(--ca)}.sdot.uk{background:var(--uk)}
+.kmt.sv{color:var(--t2);font-weight:500}
+.kmt.t-up{color:var(--green)}.kmt.t-dn{color:var(--red)}.kmt.t-st{color:var(--t3)}
+.kc-dims{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:5px 12px 9px;border-top:1px solid var(--b1)}
+.dm{display:flex;flex-direction:column;align-items:center;gap:1px}
+.dm-bar{width:100%;height:22px;background:var(--b1);border-radius:2px;overflow:hidden;display:flex;align-items:flex-end}
+.dm-fill{width:100%;border-radius:2px;transition:height .5s ease}
+.dm-label{font-size:8px;color:var(--t3);text-align:center;margin-top:1px}
+.dm-val{font-size:8px;font-family:'Space Mono',monospace;text-align:center}
+.kc-flags{display:flex;gap:4px;flex-wrap:wrap;padding:0 12px 8px}
+.rflag{padding:2px 5px;border-radius:3px;font-size:9px;background:rgba(255,23,68,.1);color:var(--red);border:1px solid rgba(255,23,68,.2)}
+.gflag{padding:2px 5px;border-radius:3px;font-size:9px;background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2)}
+.sring{width:46px;height:46px;border-radius:50%;border:2px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.sring.grade-S{border-color:var(--green);color:var(--green)}
+.sring.grade-A{border-color:var(--blue);color:var(--blue)}
+.sring.grade-B{border-color:var(--gold);color:var(--gold)}
+.sring.grade-C,.sring.grade-D{border-color:var(--red);color:var(--red)}
+.sr-n{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;line-height:1}
+.sr-g{font-size:8px;opacity:.7;margin-top:1px}
+.kc-cmp{position:absolute;top:8px;right:58px;width:16px;height:16px;border:1.5px solid var(--b2);border-radius:3px;background:var(--s2);display:none;place-items:center;font-size:9px;cursor:pointer;z-index:2;color:var(--cyan);font-weight:700}
+.compare-mode .kcard .kc-cmp{display:grid}
+.kcard.compare-pick .kc-cmp{background:var(--cyan);border-color:var(--cyan);color:#000}
+
+/* RIGHT */
+.right{background:var(--s1);border-left:1px solid var(--b1);box-shadow:-1px 0 4px rgba(0,0,0,.04);display:flex;flex-direction:column;overflow:hidden}
+.right-hd{padding:10px 14px;border-bottom:1px solid var(--b1);font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px;flex-shrink:0;min-height:41px}
+.right-body{flex:1;overflow-y:auto;padding:12px 14px}
+.rp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--t3);text-align:center;gap:12px}
+.rp-empty-ico{font-size:36px;opacity:.2}
+.rp-empty-hint{font-size:12px;line-height:2;color:var(--t2)}
+.rp-guide-steps{display:flex;flex-direction:column;gap:6px;width:100%;max-width:240px}
+.rp-gs{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t2);background:var(--s2);border:1px solid var(--b1);border-radius:5px;padding:6px 10px;text-align:left}
+.rp-gs-n{color:var(--accent);font-family:'Space Mono',monospace;font-weight:700;flex-shrink:0;font-size:10px}
+.det-kw{font-size:16px;font-weight:600;margin-bottom:2px}
+.det-kw-zh{font-size:11px;color:var(--t3);margin-bottom:4px}
+.det-sub{font-size:10px;color:var(--t3);margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap}
+.why-box{background:rgba(232,70,10,.05);border:1px solid rgba(232,70,10,.2);border-radius:6px;padding:9px 11px;margin-bottom:10px;font-size:11px;color:var(--t2);line-height:1.6}
+.why-box strong{color:var(--accent)}
+.radar-wrap{display:flex;justify-content:center;margin-bottom:10px}
+.cost-tbl{background:var(--s2);border-radius:6px;padding:9px;margin-bottom:10px}
+.ct-title{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);font-family:'Space Mono',monospace;margin-bottom:7px}
+.ct-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1);font-size:11px}
+.ct-row:last-child{border:none;font-weight:600;margin-top:3px;padding-top:5px}
+.ct-l{color:var(--t2)}.ct-v{font-family:'Space Mono',monospace}
+.ct-v.neg{color:var(--red)}.ct-v.pos{color:var(--green)}
+.dd{margin-bottom:8px;border:1px solid var(--b1);border-radius:6px;overflow:hidden}
+.dd-hd{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;background:var(--s2);transition:.1s}
+.dd-hd:hover{background:var(--s3)}
+.dd-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dd-name{font-size:11px;font-weight:500;flex:1}
+.dd-sc{font-family:'Space Mono',monospace;font-size:11px;margin-right:3px}
+.dd-arr{font-size:9px;color:var(--t3);transition:.2s}
+.dd.open .dd-arr{transform:rotate(90deg)}
+.dd-body{display:none;padding:8px 10px;border-top:1px solid var(--b1)}
+.dd.open .dd-body{display:block}
+.dd-track{height:3px;background:var(--b2);border-radius:2px;overflow:hidden;margin-bottom:7px}
+.dd-fill{height:100%;border-radius:2px;transition:width .5s}
+.dd-list{list-style:none}
+.dd-list li{font-size:11px;color:var(--t2);margin-bottom:3px;padding-left:11px;position:relative;line-height:1.5}
+.dd-list li::before{content:'·';position:absolute;left:0;color:var(--t3)}
+.act-box{background:rgba(232,70,10,.04);border:1px solid rgba(232,70,10,.18);border-radius:6px;padding:9px;margin-bottom:8px}
+.act-title{font-size:10px;color:var(--accent);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.act-step{display:flex;gap:6px;font-size:11px;color:var(--t2);margin-bottom:5px;line-height:1.5}
+.act-n{color:var(--accent);font-weight:700;flex-shrink:0}
+.det-btns{display:flex;gap:6px;margin-top:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;border-radius:5px;border:none;cursor:pointer;font-size:11px;font-family:'Noto Sans SC',sans-serif;transition:.15s}
+.btn-acc{background:var(--accent);color:#fff;flex:1}
+.btn-acc:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--s2);color:var(--t2);border:1px solid var(--b1)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.cmp-view{flex:1;overflow-y:auto;padding:12px 14px;display:none;flex-direction:column;gap:8px}
+.cmp-view.on{display:flex}
+.cmp-close-btn{padding:6px;background:var(--s2);border:1px solid var(--b1);border-radius:5px;color:var(--t2);font-size:11px;cursor:pointer;text-align:center;transition:.15s;margin-top:auto}
+.cmp-close-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 200px);color:var(--t3);text-align:center;gap:10px;padding:20px}
+.empty-ico{font-size:44px;opacity:.22}
+.empty-title{font-size:14px;color:var(--t2)}
+.empty-sub{font-size:11px;line-height:1.8;max-width:300px}
+.empty-steps{display:flex;flex-direction:column;gap:6px;margin-top:6px;width:100%;max-width:280px}
+.estep{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--t2);background:var(--s2);border:1px solid var(--b1);border-radius:5px;padding:7px 12px;text-align:left}
+.estep-n{color:var(--accent);font-family:'Space Mono',monospace;font-weight:700;flex-shrink:0}
+
+/* LOADING */
+.loading{position:fixed;inset:0;background:rgba(240,242,245,.92);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.loading.on{display:flex}
+.spin{width:38px;height:38px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-title{font-size:13px;color:var(--t2)}
+.ld-step{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace;max-width:280px;text-align:center}
+.ld-prog{width:220px;height:3px;background:var(--b1);border-radius:2px;overflow:hidden}
+.ld-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:2px;transition:width .4s ease;width:0%}
+.toast{position:fixed;bottom:14px;right:14px;background:var(--s1);border:1px solid var(--b1);border-radius:7px;box-shadow:0 4px 12px rgba(0,0,0,.12);padding:9px 14px;font-size:11px;z-index:999;transform:translateX(130%);transition:.3s;max-width:250px;line-height:1.4}
+.toast.on{transform:translateX(0)}
+.toast.ok{border-color:var(--green)}.toast.err{border-color:var(--red)}.toast.info{border-color:var(--gold)}
+
+/* MODEL SWITCHER */
+.model-wrap{position:relative}
+.model-pill{display:flex;align-items:center;gap:5px;padding:3px 9px;background:var(--s2);border:1px solid var(--b1);border-radius:5px;font-size:10px;color:var(--t2);cursor:pointer;white-space:nowrap;user-select:none}
+.model-pill:hover{border-color:var(--gold);color:var(--gold)}
+.model-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.model-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--s1);border:1px solid var(--b1);border-radius:8px;z-index:300;min-width:240px;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;overflow:hidden}
+.model-menu.open{display:block}
+.model-menu-hd{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);padding:9px 12px 5px;font-family:'Space Mono',monospace}
+.model-opt{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;transition:.1s;border-bottom:1px solid var(--b1)}
+.model-opt:last-child{border:none}
+.model-opt:hover{background:var(--s2)}
+.model-opt.active{background:rgba(255,183,0,.05)}
+.model-opt-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.model-opt-info{flex:1}
+.model-opt-name{font-size:11px;font-weight:500;color:var(--t1)}
+.model-opt.active .model-opt-name{color:var(--gold)}
+.model-opt-desc{font-size:9px;color:var(--t3);margin-top:1px}
+.model-opt-cost{font-size:9px;font-family:'Space Mono',monospace;flex-shrink:0}
+.model-opt-cost.cheap{color:var(--green)}.model-opt-cost.mid{color:var(--gold)}.model-opt-cost.exp{color:var(--red)}
+.model-check{font-size:9px;color:var(--gold);flex-shrink:0;width:12px}
+/* API CONFIG */
+.api-cfg{background:var(--s3);border:1px solid var(--b1);border-radius:6px;padding:8px 10px;margin-bottom:8px}
+.api-cfg-hd{font-size:10px;color:var(--t3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.api-cfg-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;transition:.2s}
+.api-cfg-dot.ok{background:var(--green)}
+.api-input{background:var(--s2);border:1px solid var(--b1);border-radius:4px;color:var(--t1);padding:4px 8px;font-size:11px;font-family:'Space Mono',monospace;width:100%;outline:none;transition:.15s;margin-bottom:4px}
+.api-input:focus{border-color:var(--accent)}
+.api-input::placeholder{color:var(--t3);font-size:10px}
+/* PATENT BOX */
+.pat-box{background:var(--s2);border-radius:6px;padding:9px;margin-bottom:10px}
+.pat-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pat-title{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);font-family:'Space Mono',monospace}
+.pat-badge{padding:1px 6px;border-radius:10px;font-size:9px;font-family:'Space Mono',monospace}
+.pat-badge.safe{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2)}
+.pat-badge.warn{background:rgba(255,183,0,.1);color:var(--gold);border:1px solid rgba(255,183,0,.2)}
+.pat-badge.danger{background:rgba(255,23,68,.1);color:var(--red);border:1px solid rgba(255,23,68,.2)}
+.pat-badge.loading{background:rgba(41,121,255,.1);color:var(--blue);border:1px solid rgba(41,121,255,.2);animation:pblink 1s infinite}
+@keyframes pblink{0%,100%{opacity:1}50%{opacity:.4}}
+.pat-country-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;padding:5px 8px;background:var(--s3);border-radius:4px}
+.pat-flag{font-size:12px;flex-shrink:0}
+.pat-country-info{flex:1}
+.pat-country-name{font-size:10px;color:var(--t2);font-weight:500}
+.pat-count{font-family:'Space Mono',monospace;font-size:10px;flex-shrink:0}
+.pat-count.zero{color:var(--green)}.pat-count.low{color:var(--gold)}.pat-count.high{color:var(--red)}.pat-count.pld{color:var(--blue)}
+.pat-result-list{margin-top:4px}
+.pat-item{padding:3px 0;border-bottom:1px solid var(--b1);font-size:10px}
+.pat-item:last-child{border:none}
+.pat-item-title{color:var(--t2);margin-bottom:1px;line-height:1.4}
+.pat-item-meta{color:var(--t3);font-size:9px;display:flex;gap:6px}
+.pat-item-link{color:var(--accent);text-decoration:none}
+.pat-item-link:hover{text-decoration:underline}
+.pat-src{font-size:9px;color:var(--t3);margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.pat-manual-btn{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;background:var(--s3);border:1px solid var(--b1);border-radius:3px;font-size:9px;color:var(--t2);cursor:pointer;text-decoration:none;transition:.1s}
+.pat-manual-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* CAT DROPDOWN */
+.cat-dd-wrap{position:relative;margin-bottom:8px}
+.cat-dd-trigger{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;cursor:pointer;user-select:none;transition:.15s}
+.cat-dd-trigger:hover,.cat-dd-wrap.open .cat-dd-trigger{border-color:var(--accent)}
+.cat-dd-label{flex:1;font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-dd-badge{padding:2px 7px;background:rgba(255,87,34,.12);border:1px solid rgba(255,87,34,.3);border-radius:10px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;flex-shrink:0}
+.cat-dd-arrow{font-size:9px;color:var(--t3);transition:.2s;flex-shrink:0}
+.cat-dd-wrap.open .cat-dd-arrow{transform:rotate(180deg)}
+.cat-dd-panel{display:none;background:var(--s2);border:1px solid var(--b1);border-top:none;border-radius:0 0 6px 6px;overflow:hidden}
+.cat-dd-wrap.open .cat-dd-panel{display:block}
+.cat-dd-actions{display:flex;gap:4px;padding:5px 8px;border-bottom:1px solid var(--b1);background:var(--s3)}
+.cat-dd-act{flex:1;padding:3px 0;background:var(--s2);border:1px solid var(--b1);border-radius:4px;font-size:10px;color:var(--t2);cursor:pointer;text-align:center;transition:.1s;font-family:'Noto Sans SC',sans-serif}
+.cat-dd-act:hover{border-color:var(--accent);color:var(--accent)}
+.cat-dd-list{max-height:200px;overflow-y:auto}
+.cat-dd-item{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;transition:.1s;border-bottom:1px solid rgba(255,255,255,.03)}
+.cat-dd-item:hover{background:var(--s3)}
+.cat-dd-item.on{background:rgba(255,87,34,.05)}
+.cat-dd-item .cat-cb{width:12px;height:12px;border:1.5px solid var(--b2);border-radius:3px;display:grid;place-items:center;flex-shrink:0;background:var(--s3);font-size:8px;color:transparent;transition:.12s}
+.cat-dd-item.on .cat-cb{background:var(--accent);border-color:var(--accent);color:#fff}
+
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="nav">
+  <div class="brand">
+    <div class="brand-ico">🎯</div>
+    <span class="brand-name">AMAZON SCOUT</span><span class="brand-v">v3.2</span>
+  </div>
+  <div class="nav-phases">
+    <div class="ph active" id="ph1"><div class="ph-n">1</div>设定偏好</div>
+    <div class="ph-arr">›</div>
+    <div class="ph" id="ph2"><div class="ph-n">2</div>发现关键词</div>
+    <div class="ph-arr">›</div>
+    <div class="ph" id="ph3"><div class="ph-n">3</div>7维评分</div>
+    <div class="ph-arr">›</div>
+    <div class="ph" id="ph4"><div class="ph-n">4</div>筛选决策</div>
+  </div>
+  <div class="nav-right">
+    <div class="stag us" id="s-us" onclick="toggleSite('us')">🇺🇸 US</div>
+    <div class="stag ca" id="s-ca" onclick="toggleSite('ca')">🇨🇦 CA</div>
+    <div class="stag uk" id="s-uk" onclick="toggleSite('uk')">🇬🇧 UK</div>
+    <div class="model-wrap" id="modelWrap">
+      <div class="model-pill" onclick="toggleModelMenu()">
+        <div class="model-dot"></div>
+        <span id="modelPillName">Sonnet 4</span>
+        <span style="font-size:9px;opacity:.5">▾</span>
+      </div>
+      <div class="model-menu" id="modelMenu">
+        <div class="model-menu-hd">选择算力模型</div>
+        <div class="model-opt active" onclick="setModel('claude-sonnet-4-20250514','Sonnet 4',this)">
+          <div class="model-opt-dot" style="background:#ffb300"></div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Claude Sonnet 4</div>
+            <div class="model-opt-desc">智能平衡 · 推荐日常使用</div>
+          </div>
+          <div class="model-opt-cost mid">~¥0.02/次</div>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-opt" onclick="setModel('claude-opus-4-5','Opus 4.5',this)">
+          <div class="model-opt-dot" style="background:#ff1744"></div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Claude Opus 4.5</div>
+            <div class="model-opt-desc">最强推理 · 复杂选品分析</div>
+          </div>
+          <div class="model-opt-cost exp">~¥0.10/次</div>
+          <div class="model-check"></div>
+        </div>
+        <div class="model-opt" onclick="setModel('claude-haiku-4-5-20251001','Haiku 4.5',this)">
+          <div class="model-opt-dot" style="background:#00e676"></div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Claude Haiku 4.5</div>
+            <div class="model-opt-desc">极速省钱 · 快速初筛</div>
+          </div>
+          <div class="model-opt-cost cheap">~¥0.003/次</div>
+          <div class="model-check"></div>
+        </div>
+        <!-- 自定义模型分隔线 -->
+        <div style="height:1px;background:var(--b1);margin:2px 0"></div>
+        <div class="model-opt" id="customModelOpt" onclick="event.stopPropagation();openCustomModel()">
+          <div class="model-opt-dot" style="background:var(--cyan)"></div>
+          <div class="model-opt-info">
+            <div class="model-opt-name" style="color:var(--cyan)">✏️ 自定义模型</div>
+            <div class="model-opt-desc" id="customModelDesc">输入任意 Anthropic 模型 ID</div>
+          </div>
+          <div class="model-opt-cost" style="color:var(--cyan);font-size:9px">自定义</div>
+          <div class="model-check" id="customModelCheck"></div>
+        </div>
+        <!-- 自定义模型输入区（内嵌在下拉菜单中） -->
+        <div id="customModelInputArea" style="display:none;padding:8px 12px;border-top:1px solid var(--b1);background:var(--s2)" onclick="event.stopPropagation()">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:5px">输入 Anthropic 模型 ID：</div>
+          <div style="display:flex;gap:5px">
+            <input type="text" id="customModelId" placeholder="如 claude-3-5-sonnet-20241022" 
+              style="flex:1;background:var(--s3);border:1px solid var(--b1);border-radius:4px;color:var(--t1);padding:5px 8px;font-size:11px;outline:none;font-family:monospace"
+              onclick="event.stopPropagation()">
+            <button onclick="event.stopPropagation();confirmCustomModel()" 
+              style="padding:5px 10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Noto Sans SC',sans-serif">确认</button>
+          </div>
+          <div style="font-size:9px;color:var(--t3);margin-top:4px;line-height:1.5">
+            常用：claude-3-5-sonnet-20241022 · claude-3-opus-20240229<br>
+            完整列表见 <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" style="color:var(--cyan)">Anthropic 文档</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mcp-pill" onclick="toast('MCP配置：在Claude Code中输入帮我配置卖家精灵MCP','info')">
+      <div class="mcp-dot" id="mcpDot"></div>
+      <span>MCP</span>
+      <span id="mcpCnt" style="font-family:monospace;color:var(--t3)">0/1000</span>
+    </div>
+  </div>
+</nav>
+<div class="body">
+<!-- LEFT -->
+<div class="left">
+  <div class="left-scroll">
+    <!-- API CONFIG -->
+    <!-- CATEGORY DROPDOWN -->
+    <div class="sec">
+      <div class="sec-hd">选择类目 <div class="sec-hd-line"></div></div>
+      <div class="cat-dd-wrap" id="catDdWrap">
+        <div class="cat-dd-trigger" onclick="toggleCatDd()">
+          <span style="font-size:13px">📦</span>
+          <span class="cat-dd-label" id="catDdLabel">点击展开选择类目...</span>
+          <span class="cat-dd-badge" id="catCntBtn">已选 0</span>
+          <span class="cat-dd-arrow">▾</span>
+        </div>
+        <div class="cat-dd-panel">
+          <div class="cat-dd-actions">
+            <div class="cat-dd-act" onclick="selectAllCats()">全选</div>
+            <div class="cat-dd-act" onclick="clearAllCats()">清空</div>
+          </div>
+          <div class="cat-dd-list" id="catList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd">7维度权重 <div class="sec-hd-line"></div></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d1)"></div><span class="dim-name">① 市场容量</span><input type="range" id="dw1" min="1" max="5" value="5" style="accent-color:var(--d1)" oninput="dw('dw1',this.value)"><span class="dim-val" id="dw1v" style="color:var(--d1)">5</span></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d2)"></div><span class="dim-name">② 竞争程度</span><input type="range" id="dw2" min="1" max="5" value="5" style="accent-color:var(--d2)" oninput="dw('dw2',this.value)"><span class="dim-val" id="dw2v" style="color:var(--d2)">5</span></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d3)"></div><span class="dim-name">③ 盈利空间</span><input type="range" id="dw3" min="1" max="5" value="5" style="accent-color:var(--d3)" oninput="dw('dw3',this.value)"><span class="dim-val" id="dw3v" style="color:var(--d3)">5</span></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d4)"></div><span class="dim-name">④ 差异化机会</span><input type="range" id="dw4" min="1" max="5" value="4" style="accent-color:var(--d4)" oninput="dw('dw4',this.value)"><span class="dim-val" id="dw4v" style="color:var(--d4)">4</span></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d5)"></div><span class="dim-name">⑤ 侵权风险(-)</span><input type="range" id="dw5" min="1" max="5" value="5" style="accent-color:var(--d5)" oninput="dw('dw5',this.value)"><span class="dim-val" id="dw5v" style="color:var(--d5)">5</span></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d6)"></div><span class="dim-name">⑥ 物流难度(-)</span><input type="range" id="dw6" min="1" max="5" value="4" style="accent-color:var(--d6)" oninput="dw('dw6',this.value)"><span class="dim-val" id="dw6v" style="color:var(--d6)">4</span></div>
+      <div class="dim-row"><div class="dim-dot" style="background:var(--d7)"></div><span class="dim-name">⑦ 资金供应链</span><input type="range" id="dw7" min="1" max="5" value="3" style="accent-color:var(--d7)" oninput="dw('dw7',this.value)"><span class="dim-val" id="dw7v" style="color:var(--d7)">3</span></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd">偏好设置 <div class="sec-hd-line"></div></div>
+      <div class="pg2" style="margin-bottom:6px">
+        <div class="pf"><label>最低价 ($)</label><input type="number" id="pMin" value="20" min="1"></div>
+        <div class="pf"><label>最高价 ($)</label><input type="number" id="pMax" value="60" min="1"></div>
+        <div class="pf"><label>目标利润率 (%)</label><input type="number" id="tMargin" value="30" min="5"></div>
+        <div class="pf"><label>最大重量 (kg)</label><input type="number" id="maxWt" value="1.5" min="0.1" step="0.1"></div>
+      </div>
+      <div class="pf" style="margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:4px">资金预算
+          <span style="font-size:9px;color:var(--t3);font-weight:400">（首批备货+头程+推广）</span>
+        </label>
+        <select id="budget" onchange="onBudgetChange(this.value)">
+          <option value="small">$3,000 以下</option>
+          <option value="mid" selected>$3,000 - $15,000</option>
+          <option value="large">$15,000 以上</option>
+          <option value="custom">✏️ 自定义金额...</option>
+        </select>
+      </div>
+      <div id="budgetCustomWrap" style="display:none;margin-bottom:7px">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:11px;color:var(--t3);flex-shrink:0">$</span>
+          <input type="number" id="budgetCustomMin" placeholder="最低" min="0" style="flex:1">
+          <span style="font-size:11px;color:var(--t3);flex-shrink:0">—</span>
+          <input type="number" id="budgetCustomMax" placeholder="最高" min="0" style="flex:1">
+        </div>
+        <div style="font-size:9px;color:var(--t3);margin-top:3px">留空表示不限上限</div>
+      </div>
+      <div class="pf" style="margin-bottom:4px"><label>每类目发现数量</label>
+        <select id="kwCount" onchange="onKwCountChange(this.value)">
+          <option value="5">5个（快速）</option>
+          <option value="10" selected>10个（推荐）</option>
+          <option value="20">20个（深度）</option>
+          <option value="custom">✏️ 自定义数量...</option>
+        </select>
+      </div>
+      <div id="kwCountCustomWrap" style="display:none;margin-bottom:7px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" id="kwCountCustom" placeholder="输入数量" min="1" max="50" value="15" style="flex:1">
+          <span style="font-size:10px;color:var(--t3);white-space:nowrap">个/类目</span>
+        </div>
+        <div style="font-size:9px;color:var(--t3);margin-top:3px">建议 5–50，过多会增加 Token 消耗</div>
+      </div>
+      <label class="chk"><input type="checkbox" id="exSens" checked>排除敏感商品</label>
+      <label class="chk"><input type="checkbox" id="exPat" checked>排除专利侵权风险</label>
+      <label class="chk"><input type="checkbox" id="exSeas" checked>排除强季节性商品</label>
+      <label class="chk"><input type="checkbox" id="needDiff">只看有差异化空间的</label>
+    </div>
+  </div>
+  <div class="disc-wrap">
+    <button class="disc-btn" id="discBtn" onclick="startDiscover()">🔍 发现选品机会</button>
+    <button class="reset-btn" id="resetBtn" onclick="resetAll()" style="display:none">🗑 清空结果，重新开始</button>
+  </div>
+</div>
+<!-- CENTER -->
+<div class="center">
+  <div class="cbar" id="cbar" style="display:none">
+    <div class="fchip on" onclick="fGrade('all',this)">全部</div>
+    <div class="fchip" onclick="fGrade('S',this)">🏆 S</div>
+    <div class="fchip" onclick="fGrade('A',this)">✅ A</div>
+    <div class="fchip" onclick="fGrade('B',this)">🟡 B</div>
+    <div class="fchip" onclick="fGrade('CD',this)">⚠️ C/D</div>
+    <div class="cbar-sep"></div>
+    <div class="fchip" id="fs-us" onclick="fSite('us',this)">🇺🇸</div>
+    <div class="fchip" id="fs-ca" onclick="fSite('ca',this)">🇨🇦</div>
+    <div class="fchip" id="fs-uk" onclick="fSite('uk',this)">🇬🇧</div>
+    <div class="cbar-sep"></div>
+    <div class="sort-wrap">
+      <span class="sort-lbl">排序</span>
+      <select class="sort-sel" onchange="sortBy(this.value)">
+        <option value="score">综合分</option>
+        <option value="d1">市场容量</option>
+        <option value="d2">竞争程度</option>
+        <option value="d3">盈利空间</option>
+        <option value="d4">差异化</option>
+        <option value="sales">月销量</option>
+      </select>
+    </div>
+    <div class="cbar-right">
+      <span class="res-count" id="resCount">0 个机会</span>
+      <button class="cmp-btn" id="cmpToggle" onclick="toggleCmp()">对比模式</button>
+      <button class="exp-btn" onclick="exportCSV()">📊 导出</button>
+    </div>
+  </div>
+  <div class="cbody" id="cbody">
+    <div class="empty" id="emptyState">
+      <div class="empty-ico">🔍</div>
+      <div class="empty-title">选择类目，发现选品机会</div>
+      <div class="empty-sub">系统自动发现候选关键词并按7个核心维度打分分析</div>
+      <div class="empty-steps">
+        <div class="estep"><span class="estep-n">①</span>左侧勾选感兴趣的类目</div>
+        <div class="estep"><span class="estep-n">②</span>调整7维度权重匹配你的策略</div>
+        <div class="estep"><span class="estep-n">③</span>点击「发现选品机会」</div>
+        <div class="estep"><span class="estep-n">④</span>点击关键词查看7维度详情</div>
+      </div>
+    </div>
+    <div id="kwList"></div>
+  </div>
+</div>
+<!-- RIGHT -->
+<div class="right">
+  <div class="right-hd">
+    <span>📊</span>
+    <span id="rightHdTxt">7维度分析</span>
+    <span id="rightHdSub" style="font-size:10px;color:var(--t3);margin-left:auto"></span>
+  </div>
+  <div class="right-body" id="rightBody">
+    <div class="rp-empty">
+      <div class="rp-empty-ico">🎯</div>
+      <div class="rp-empty-hint">点击中间任意关键词<br>查看7维度详细分析</div>
+      <div class="rp-guide-steps">
+        <div class="rp-gs"><span class="rp-gs-n">①</span>左侧勾选类目并设定偏好</div>
+        <div class="rp-gs"><span class="rp-gs-n">②</span>点击「发现选品机会」</div>
+        <div class="rp-gs"><span class="rp-gs-n">③</span>点击卡片查看7维详情</div>
+        <div class="rp-gs"><span class="rp-gs-n">④</span>开启对比模式同时分析3个</div>
+      </div>
+    </div>
+  </div>
+  <div class="cmp-view" id="cmpView">
+    <div style="font-size:12px;color:var(--cyan);font-weight:500">⚡ 对比模式</div>
+    <div style="font-size:11px;color:var(--t3)">勾选中间列表中的关键词（最多3个）</div>
+    <div id="cmpContent" style="flex:1;overflow-y:auto"></div>
+    <button class="cmp-close-btn" onclick="toggleCmp()">退出对比模式</button>
+  </div>
+</div>
+</div>
+</div>
+<div class="loading" id="loading">
+  <div class="spin"></div>
+  <div class="ld-title" id="ldTitle">正在发现选品机会...</div>
+  <div class="ld-step" id="ldStep">初始化...</div>
+  <div class="ld-prog"><div class="ld-bar" id="ldBar"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ═══ 全局配置对象（单一数据源）═══
+let CFG={
+  workerUrl: localStorage.getItem('scout_worker_url')||'',
+  password:  localStorage.getItem('scout_password')||'',
+  apiKey:    localStorage.getItem('scout_api_key')||'',
+  model:     localStorage.getItem('scout_model')||'claude-sonnet-4-20250514',
+};
+const isWorkerConfigured=()=>!!(CFG.workerUrl||CFG.apiKey);
+
+const CATS=[
+  {ico:'🏠',name:'Home & Kitchen'},
+  {ico:'⚽',name:'Sports & Outdoors'},
+  {ico:'💊',name:'Health & Household'},
+  {ico:'🔧',name:'Tools & Home Improvement'},
+  {ico:'🐾',name:'Pet Supplies'},
+  {ico:'👶',name:'Baby'},
+  {ico:'📎',name:'Office Products'},
+  {ico:'🌿',name:'Garden & Outdoor'},
+  {ico:'🧸',name:'Toys & Games'},
+  {ico:'💄',name:'Beauty & Personal Care'},
+  {ico:'🚗',name:'Automotive'},
+  {ico:'🎨',name:'Arts & Crafts'}
+];
+const DC=['#00e676','#ff9100','#ffb300','#00e5ff','#ff1744','#d500f9','#2979ff'];
+const DN=['市场容量','竞争程度','盈利空间','差异化','侵权安全','物流友好','供应链'];
+const DS=['需求','竞争','利润','差异','侵权','物流','供链'];
+const SITES={us:'🇺🇸 US',ca:'🇨🇦 CA',uk:'🇬🇧 UK'};
+const DOM={us:'amazon.com',ca:'amazon.ca',uk:'amazon.co.uk'};
+const CURR={us:'$',ca:'C$',uk:'£'};
+const SPM={us:1,ca:1.35,uk:0.82};
+
+let selCats=[],actSites={us:true,ca:true,uk:true},allKws=[],gF='all',sF='all',sK='score',cmpMode=false,cmpPicks=[];
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('catList').innerHTML=CATS.map(c=>`
+    <div class="cat-dd-item" onclick="togCat(this,'${c.name}')">
+      <div class="cat-cb">✓</div>
+      <span class="cat-ico" style="font-size:11px">${c.ico}</span>
+      <span class="cat-name" style="font-size:11px">${c.name}</span>
+    </div>`).join('');
+  checkApiCfg();
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.model-wrap'))document.getElementById('modelMenu').classList.remove('open');
+    if(!e.target.closest('.cat-dd-wrap'))document.getElementById('catDdWrap').classList.remove('open');
+  });
+});
+
+function togCat(el,n){
+  el.classList.toggle('on');
+  selCats.includes(n)?selCats=selCats.filter(c=>c!==n):selCats.push(n);
+  updateCatLabel();
+}
+function selectAllCats(){
+  selCats=CATS.map(c=>c.name);
+  document.querySelectorAll('.cat-item').forEach(e=>e.classList.add('on'));
+  updateCatLabel();
+}
+function clearAllCats(){
+  selCats=[];
+  document.querySelectorAll('.cat-dd-item').forEach(e=>e.classList.remove('on'));
+  updateCatLabel();
+}
+function toggleSite(s){
+  actSites[s]=!actSites[s];
+  document.getElementById('s-'+s).classList.toggle('off',!actSites[s]);
+  if(allKws.length)renderKws();
+}
+function dw(id,v){
+  document.getElementById(id+'v').textContent=v;
+  if(allKws.length){recalc();renderKws()}
+}
+
+// ===== DEMO DATA POOL (per category, data is accurate) =====
+const DPOOL={
+'Home & Kitchen':[
+  {kw:'magnetic whiteboard for kitchen',zh:'厨房磁性白板',p:{t:26.99},mkt:{sv:31000,ms:6200,bsr:'#400-#900',dt:'evergreen',tr:'stable'},comp:{t1r:1800,t10r:850,src:2200,opp:'high',conc:'low',pp:['磁力弱','板面涂层易花','尺寸单一']},prof:{c:5,fba:3.8,m:0.38,mp:15},diff:{lvl:'high',ang:['强磁双面','纳米涂层','含备忘贴'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.6,dim:'12x8x0.2in',haz:false,fra:false},sup:{moq:200,cny:32,s:'many',cy:40},sc:{d1:75,d2:85,d3:83,d4:88,d5:95,d6:93,d7:88},rf:[],gf:['低竞争','轻小件','差异化大'],why:'现有产品磁力和涂层质量差，改进空间明显',ds:'纳米涂层防刮+双面磁性'},
+  {kw:'silicone food storage bags reusable',zh:'可重复使用硅胶食品袋',p:{t:24.99},mkt:{sv:48000,ms:9500,bsr:'#250-#700',dt:'evergreen',tr:'growing'},comp:{t1r:5200,t10r:2100,src:5500,opp:'medium',conc:'medium',pp:['封口不严','硅胶有异味','不易清洗']},prof:{c:5.5,fba:3.5,m:0.35,mp:12},diff:{lvl:'medium',ang:['双层密封','食品级无味','宽口易清洗'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:['FDA'],gate:false},log:{wt:0.4,dim:'8x6x0.5in',haz:false,fra:false},sup:{moq:300,cny:35,s:'many',cy:45},sc:{d1:82,d2:68,d3:78,d4:75,d5:88,d6:96,d7:85},rf:['需FDA认证'],gf:['环保趋势','高搜索量'],why:'封口和异味是主要差评痛点',ds:'双重密封+宽口设计'},
+  {kw:'over door hook organizer adjustable',zh:'门背可调挂钩收纳架',p:{t:22.99},mkt:{sv:42000,ms:8800,bsr:'#300-#800',dt:'evergreen',tr:'stable'},comp:{t1r:3100,t10r:1400,src:4200,opp:'medium',conc:'low',pp:['稳定性差','挂钩脱落','宽度不通用']},prof:{c:4.5,fba:4.1,m:0.34,mp:14},diff:{lvl:'medium',ang:['加厚防刮垫','可调节宽度','承重15kg'],sku:'medium'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:1.1,dim:'15x4x2in',haz:false,fra:false},sup:{moq:200,cny:28,s:'many',cy:40},sc:{d1:80,d2:72,d3:76,d4:72,d5:95,d6:82,d7:88},rf:[],gf:['高搜索量','刚需收纳'],why:'家庭收纳刚需，稳定性是最大痛点',ds:'可调宽度+加厚保护垫'},
+],
+'Pet Supplies':[
+  {kw:'dog lick mat with suction cup',zh:'宠物舔食垫吸盘款',p:{t:18.99},mkt:{sv:38000,ms:9800,bsr:'#150-#500',dt:'evergreen',tr:'growing'},comp:{t1r:4200,t10r:1800,src:2800,opp:'medium',conc:'medium',pp:['吸盘不牢','花纹太简单','材质有异味']},prof:{c:3.5,fba:3.2,m:0.35,mp:12},diff:{lvl:'high',ang:['超强吸盘','3D迷宫纹','食品级硅胶'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:['FDA食品级'],gate:false},log:{wt:0.3,dim:'9x9x0.5in',haz:false,fra:false},sup:{moq:200,cny:22,s:'many',cy:35},sc:{d1:80,d2:70,d3:82,d4:88,d5:88,d6:98,d7:92},rf:['需FDA认证'],gf:['超轻小件','宠物市场增速快'],why:'舔食垫需求持续增长，吸盘是改进点',ds:'超吸力吸盘+3D迷宫延长舔食时间'},
+  {kw:'cat window perch suction cups heavy duty',zh:'猫咪吸盘窗台躺椅',p:{t:32.99},mkt:{sv:28000,ms:5500,bsr:'#500-#1200',dt:'evergreen',tr:'growing'},comp:{t1r:2200,t10r:980,src:1800,opp:'high',conc:'low',pp:['吸力不足','承重差','组装复杂']},prof:{c:7,fba:4.5,m:0.37,mp:20},diff:{lvl:'high',ang:['工业级吸盘','承重20kg','免工具安装'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:1.5,dim:'16x12x4in',haz:false,fra:false},sup:{moq:200,cny:45,s:'medium',cy:45},sc:{d1:72,d2:82,d3:80,d4:90,d5:95,d6:80,d7:82},rf:[],gf:['低竞争','猫经济增长'],why:'吸力和承重是核心痛点，改进空间大',ds:'工业级真空吸盘主打\"不掉落\"保证'},
+  {kw:'slow feeder dog bowl puzzle',zh:'狗狗益智慢食碗',p:{t:21.99},mkt:{sv:45000,ms:10200,bsr:'#200-#600',dt:'evergreen',tr:'growing'},comp:{t1r:3800,t10r:1600,src:3200,opp:'medium',conc:'medium',pp:['难清洗','狗会移动碗','难度不够']},prof:{c:4,fba:3.5,m:0.36,mp:13},diff:{lvl:'high',ang:['防滑底座','洗碗机可用','可调节难度'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:['FDA'],gate:false},log:{wt:0.5,dim:'10x10x2in',haz:false,fra:false},sup:{moq:300,cny:26,s:'many',cy:35},sc:{d1:84,d2:72,d3:80,d4:85,d5:88,d6:95,d7:90},rf:['需FDA认证'],gf:['高搜索量','差异化大'],why:'宠物健康意识提升，清洁难是主要痛点',ds:'可拆卸可调难度+洗碗机安全认证'},
+],
+'Health & Household':[
+  {kw:'weighted sleep mask contoured',zh:'立体遮光重力眼罩',p:{t:34.99},mkt:{sv:28000,ms:5200,bsr:'#600-#1500',dt:'evergreen',tr:'growing'},comp:{t1r:1800,t10r:780,src:1200,opp:'high',conc:'low',pp:['重量分布不均','材质闷热','调节带勒头']},prof:{c:6,fba:3.6,m:0.41,mp:18},diff:{lvl:'high',ang:['均匀重力分布','立体眼杯','冰丝透气'],sku:'easy'},ip:{pr:'low',tr2:'none',cert:[],gate:false},log:{wt:0.5,dim:'8x4x1in',haz:false,fra:false},sup:{moq:200,cny:40,s:'medium',cy:40},sc:{d1:72,d2:85,d3:88,d4:92,d5:80,d6:95,d7:85},rf:['需查重力设计专利'],gf:['低竞争','高利润','差异化大'],why:'睡眠经济趋势，工艺痛点明显',ds:'立体眼杯+均匀重力分布彻底解决压眼'},
+  {kw:'pill organizer weekly large compartment',zh:'大容量一周药盒',p:{t:19.99},mkt:{sv:55000,ms:11000,bsr:'#200-#600',dt:'evergreen',tr:'stable'},comp:{t1r:4500,t10r:1900,src:5000,opp:'medium',conc:'medium',pp:['格子太小','盖子难开','不防水']},prof:{c:3.5,fba:3.2,m:0.37,mp:12},diff:{lvl:'medium',ang:['加大格子','老年人易开盖','IPX4防水'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.3,dim:'8x3x1in',haz:false,fra:false},sup:{moq:500,cny:22,s:'many',cy:30},sc:{d1:85,d2:68,d3:82,d4:72,d5:95,d6:98,d7:92},rf:[],gf:['高搜索量','老龄化刚需','极轻小件'],why:'老龄化社会刚需，格子小是最高频差评',ds:'针对老年人大字标注+单手开盖机构'},
+],
+'Tools & Home Improvement':[
+  {kw:'magnetic wristband tool holder',zh:'磁性腕带工具带',p:{t:18.99},mkt:{sv:32000,ms:7800,bsr:'#300-#800',dt:'evergreen',tr:'stable'},comp:{t1r:2400,t10r:1050,src:2100,opp:'high',conc:'low',pp:['磁力弱','腕带不舒服','尺寸不通用']},prof:{c:3.5,fba:3.1,m:0.38,mp:12},diff:{lvl:'high',ang:['N52强磁','氯丁橡胶带','多尺寸可调'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.2,dim:'8x3x0.5in',haz:false,fra:false},sup:{moq:300,cny:22,s:'many',cy:35},sc:{d1:76,d2:84,d3:85,d4:90,d5:95,d6:98,d7:92},rf:[],gf:['超轻小件','低竞争','差异化大'],why:'DIY人群刚需，磁力弱是普遍差评',ds:'N52磁铁+专业施工场景营销'},
+  {kw:'drywall anchor screws assortment kit',zh:'石膏板锚钉螺丝套装',p:{t:22.99},mkt:{sv:28000,ms:6500,bsr:'#350-#900',dt:'evergreen',tr:'stable'},comp:{t1r:2100,t10r:890,src:2800,opp:'high',conc:'low',pp:['数量不够','没有安装说明','分类混乱']},prof:{c:4,fba:3.5,m:0.37,mp:15},diff:{lvl:'high',ang:['分类收纳盒','含详细图解说明','多种规格齐全'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.8,dim:'8x6x2in',haz:false,fra:false},sup:{moq:300,cny:26,s:'many',cy:40},sc:{d1:72,d2:85,d3:80,d4:85,d5:95,d6:90,d7:90},rf:[],gf:['低竞争','刚需','差异化大'],why:'装修场景刚需，分类混乱是主要痛点',ds:'分类收纳盒+图解说明，解决两大痛点'},
+],
+'Sports & Outdoors':[
+  {kw:'foam roller for back pain relief',zh:'背部疼痛泡沫滚轴',p:{t:32.99},mkt:{sv:35000,ms:7200,bsr:'#350-#900',dt:'evergreen',tr:'growing'},comp:{t1r:2600,t10r:1100,src:3500,opp:'high',conc:'low',pp:['密度太软无效','容易变形','只有单一密度']},prof:{c:6,fba:4.2,m:0.38,mp:20},diff:{lvl:'high',ang:['三区域差异密度','脊椎中空凹槽','含使用指南'],sku:'easy'},ip:{pr:'low',tr2:'none',cert:[],gate:false},log:{wt:1.2,dim:'13x5x5in',haz:false,fra:false},sup:{moq:200,cny:40,s:'many',cy:40},sc:{d1:78,d2:80,d3:82,d4:88,d5:82,d6:82,d7:85},rf:['需查专利'],gf:['低竞争','健康趋势','差异化大'],why:'慢性疼痛管理需求增长，单一密度是最大痛点',ds:'三区域密度+脊椎保护凹槽'},
+  {kw:'resistance bands set with handles door anchor',zh:'阻力带套装含手柄门锚',p:{t:27.99},mkt:{sv:62000,ms:13000,bsr:'#180-#550',dt:'evergreen',tr:'stable'},comp:{t1r:9500,t10r:3800,src:12000,opp:'medium',conc:'medium',pp:['弹力不均匀','手柄不舒适','容易断']},prof:{c:5.5,fba:3.6,m:0.33,mp:15},diff:{lvl:'medium',ang:['天然乳胶','人体工学手柄','终身保换'],sku:'medium'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.8,dim:'12x6x4in',haz:false,fra:false},sup:{moq:300,cny:36,s:'many',cy:45},sc:{d1:88,d2:62,d3:75,d4:70,d5:92,d6:92,d7:85},rf:['Top1评价9500，门槛较高'],gf:['高搜索量','刚需健身'],why:'居家健身刚需，需要明确差异化才能切入',ds:'天然乳胶+终身保换服务，溢价定位'},
+],
+'Office Products':[
+  {kw:'monitor stand riser with storage bamboo',zh:'竹木显示器支架带收纳',p:{t:38.99},mkt:{sv:52000,ms:10500,bsr:'#200-#600',dt:'evergreen',tr:'growing'},comp:{t1r:6800,t10r:2800,src:7500,opp:'medium',conc:'medium',pp:['高度不可调','收纳格太浅','材质廉价']},prof:{c:9,fba:5.2,m:0.32,mp:25},diff:{lvl:'medium',ang:['可调5档高度','深度收纳格','竹木天然材质'],sku:'medium'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:2.2,dim:'14x9x5in',haz:false,fra:false},sup:{moq:200,cny:58,s:'many',cy:50},sc:{d1:84,d2:65,d3:72,d4:75,d5:90,d6:75,d7:78},rf:['重量2.2kg(约5lbs) FBA费较高'],gf:['居家办公趋势','高搜索量'],why:'高度固定和收纳浅是主要痛点',ds:'可调高度+竹木材质走环保路线'},
+  {kw:'cable management box cord organizer wooden',zh:'木质桌面理线盒',p:{t:32.99},mkt:{sv:38000,ms:8200,bsr:'#280-#700',dt:'evergreen',tr:'growing'},comp:{t1r:3200,t10r:1350,src:4100,opp:'high',conc:'low',pp:['尺寸固定容量不够','透气差发热','颜色单一']},prof:{c:7,fba:4.5,m:0.35,mp:20},diff:{lvl:'high',ang:['可扩展模块化','镂空散热','多木色可选'],sku:'medium'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:1.4,dim:'12x5x5in',haz:false,fra:false},sup:{moq:200,cny:48,s:'many',cy:45},sc:{d1:78,d2:78,d3:78,d4:85,d5:92,d6:82,d7:82},rf:[],gf:['低竞争','居家办公趋势'],why:'WFH趋势让桌面整洁需求激增',ds:'模块化可扩展+实木质感走高端路线'},
+],
+'Garden & Outdoor':[
+  {kw:'reusable produce bags mesh set organic',zh:'有机网眼蔬果袋套装',p:{t:16.99},mkt:{sv:22000,ms:6500,bsr:'#400-#1000',dt:'evergreen',tr:'growing'},comp:{t1r:3500,t10r:1400,src:2200,opp:'high',conc:'low',pp:['网眼大漏小物','扎口绳不耐用','尺寸单一']},prof:{c:2.5,fba:3.1,m:0.33,mp:10},diff:{lvl:'high',ang:['多尺寸8件套','加密网眼','GOTS认证'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:['GOTS认证'],gate:false},log:{wt:0.2,dim:'12x8x1in',haz:false,fra:false},sup:{moq:500,cny:15,s:'many',cy:30},sc:{d1:68,d2:78,d3:80,d4:85,d5:95,d6:98,d7:92},rf:[],gf:['极轻小件','环保趋势','0侵权'],why:'环保升级，起订量低成本极低',ds:'多尺寸套装+GOTS认证走高端路线'},
+],
+'Baby':[
+  {kw:'baby food maker steamer blender combo',zh:'婴儿辅食机蒸煮一体',p:{t:54.99},mkt:{sv:28000,ms:5800,bsr:'#400-#1000',dt:'evergreen',tr:'stable'},comp:{t1r:2100,t10r:950,src:1500,opp:'high',conc:'low',pp:['清洁困难','噪音大','容量不够']},prof:{c:14,fba:5.8,m:0.32,mp:35},diff:{lvl:'high',ang:['自清洁功能','静音设计','1000ml大容量'],sku:'easy'},ip:{pr:'low',tr2:'none',cert:['FDA','CE'],gate:true},log:{wt:2.2,dim:'9x6x10in',haz:false,fra:false},sup:{moq:200,cny:90,s:'medium',cy:60},sc:{d1:72,d2:82,d3:72,d4:85,d5:78,d6:72,d7:70},rf:['需FDA+CE认证','类目审核'],gf:['低竞争','差异化大'],why:'自清洁是核心突破口',ds:'自清洁系统+静音电机主打省力场景'},
+],
+'Toys & Games':[
+  {kw:'sensory fidget toys set adults stress',zh:'成人解压感官玩具套装',p:{t:24.99},mkt:{sv:42000,ms:9200,bsr:'#250-#700',dt:'evergreen',tr:'growing'},comp:{t1r:3200,t10r:1400,src:4500,opp:'medium',conc:'medium',pp:['质量差易坏','噪音扰人','无收纳']},prof:{c:5,fba:3.8,m:0.36,mp:15},diff:{lvl:'high',ang:['静音设计','高品质材质','含收纳盒'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:['ASTM'],gate:false},log:{wt:0.5,dim:'8x5x3in',haz:false,fra:false},sup:{moq:300,cny:32,s:'many',cy:40},sc:{d1:82,d2:68,d3:80,d4:85,d5:88,d6:95,d7:88},rf:['需ASTM认证'],gf:['增长趋势','差异化大'],why:'焦虑缓解需求增长，噪音和品质是核心痛点',ds:'静音版本+商务场景营销'},
+],
+'Beauty & Personal Care':[
+  {kw:'scalp massager shampoo brush electric waterproof',zh:'防水电动洗头按摩刷',p:{t:28.99},mkt:{sv:55000,ms:12000,bsr:'#200-#600',dt:'evergreen',tr:'growing'},comp:{t1r:5500,t10r:2300,src:6200,opp:'medium',conc:'medium',pp:['防水差','续航短','刷头太硬']},prof:{c:6,fba:3.8,m:0.36,mp:18},diff:{lvl:'medium',ang:['IPX7防水','30分钟续航','软硅胶刷头'],sku:'medium'},ip:{pr:'low',tr2:'none',cert:[],gate:false},log:{wt:0.4,dim:'6x2x2in',haz:false,fra:false},sup:{moq:300,cny:40,s:'many',cy:45},sc:{d1:88,d2:62,d3:78,d4:72,d5:80,d6:95,d7:82},rf:['需查电动专利'],gf:['高搜索量','增长市场'],why:'防水和续航是主要差评',ds:'IPX7级防水+30分钟续航解决两大痛点'},
+],
+'Automotive':[
+  {kw:'car trash can with lid leakproof',zh:'车载防漏垃圾桶',p:{t:18.99},mkt:{sv:35000,ms:8200,bsr:'#300-#800',dt:'evergreen',tr:'stable'},comp:{t1r:2800,t10r:1200,src:3200,opp:'high',conc:'low',pp:['盖子关不严','异味大','固定不稳']},prof:{c:3.5,fba:3.2,m:0.37,mp:12},diff:{lvl:'high',ang:['双层防臭盖','多位置固定','可换内胆'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.4,dim:'7x5x4in',haz:false,fra:false},sup:{moq:300,cny:24,s:'many',cy:35},sc:{d1:78,d2:82,d3:83,d4:88,d5:95,d6:96,d7:92},rf:[],gf:['低竞争','轻小件','差异化大'],why:'防漏防臭和固定方式是核心差评',ds:'可换内胆+双层密封盖解决异味和防漏'},
+],
+'Arts & Crafts':[
+  {kw:'watercolor brush set professional nylon',zh:'专业尼龙水彩毛笔套装',p:{t:24.99},mkt:{sv:28000,ms:6200,bsr:'#400-#1000',dt:'evergreen',tr:'stable'},comp:{t1r:2200,t10r:900,src:3800,opp:'high',conc:'low',pp:['笔毛脱落','吸水性差','套装搭配不合理']},prof:{c:4.5,fba:3.5,m:0.38,mp:15},diff:{lvl:'high',ang:['防脱毛纤维','强吸水笔芯','专业套装'],sku:'easy'},ip:{pr:'none',tr2:'none',cert:[],gate:false},log:{wt:0.4,dim:'10x4x2in',haz:false,fra:false},sup:{moq:300,cny:30,s:'many',cy:40},sc:{d1:70,d2:82,d3:82,d4:88,d5:95,d6:96,d7:88},rf:[],gf:['低竞争','差异化大','轻小件'],why:'脱毛是最高频差评，工艺可改进',ds:'防脱毛工艺+专业搭配方案'},
+],
+};
+
+async function startDiscover(){
+  if(!selCats.length){toast('请先选择至少一个类目','err');return}
+  const sites=Object.keys(actSites).filter(s=>actSites[s]);
+  if(!sites.length){toast('请选择至少一个站点','err');return}
+  // 关闭类目下拉
+  try{closeCatDd();}catch(e){}
+  showLoad(true,'正在发现选品机会...','连接数据源...');
+  setPhase(2); allKws=[];
+  // 读取配置：优先 CFG（⚙弹窗），同时兼容旧版 input 字段
+  const workerUrl = CFG.workerUrl || '';
+  const apiKey    = CFG.apiKey    || '';
+  const hasConfig = !!(workerUrl || apiKey);
+  try{
+    if(hasConfig){
+      await callClaudeViaWorker(selCats, sites);
+    } else {
+      throw new Error('no_config');
+    }
+  }catch(e){
+    if(e.message==='no_config'){
+      toast('未配置 Worker，当前展示演示数据。点击右上角 ⚙ 配置后可使用真实 AI。','info');
+    } else {
+      console.error('AI调用失败:', e.message);
+      toast('AI 调用失败，已切换演示数据','info');
+    }
+    genDemo(selCats, sites);
+  }
+  // 所有后续操作包在 try/catch 里，确保 loading 一定关闭
+  try {
+    allKws = dedup(allKws);
+    recalc();
+    setPhase(3);
+    const _es=document.getElementById('emptyState');if(_es)_es.style.display='none';
+    const _cb=document.getElementById('cbar');if(_cb)_cb.style.display='flex';
+    const _rb=document.getElementById('resetBtn');if(_rb)_rb.style.display='flex';
+    renderKws();
+    setPhase(4);
+  } catch(err) {
+    console.error('渲染错误:', err.message, err.stack);
+    toast('渲染出错：' + err.message, 'err');
+  } finally {
+    showLoad(false);
+  }
+}
+
+// FIX: Dedup by keyword+site combo
+function dedup(kws){
+  const seen=new Set();
+  return kws.filter(k=>{
+    const key=k.keyword.toLowerCase().trim()+'||'+k.site;
+    if(seen.has(key))return false;
+    seen.add(key);return true;
+  });
+}
+
+async function callClaude(cats,sites){
+  const kwCount=getKwCount();
+  const pMin=document.getElementById('pMin').value,pMax=document.getElementById('pMax').value;
+  const budget=document.getElementById('budget').value;
+  const tMargin=document.getElementById('tMargin').value;
+  const maxWt=document.getElementById('maxWt').value;
+  const bl=getBudgetLabel();
+  setLdStep('Claude AI 分析类目市场机会...');setLdPct(15);
+  const prompt=`你是亚马逊跨境电商资深选品顾问。
+
+任务：主动为卖家发现高潜力选品关键词。
+
+目标类目：${cats.join('、')}
+目标站点：${sites.map(s=>SITES[s]+'('+DOM[s]+')').join('、')}
+价格区间：$${pMin}-$${pMax} USD，目标净利润率≥${tMargin}%，最大重量${maxWt}kg，资金预算${bl}
+排除敏感品：${document.getElementById('exSens').checked}，排除侵权：${document.getElementById('exPat').checked}，排除季节性：${document.getElementById('exSeas').checked}
+
+选品原则：先验证需求→再看竞争→最后算盈利。避开红海（蓝牙耳机/手机壳等）。
+关键词必须与类目强相关（Pet Supplies只给宠物用品，Home & Kitchen只给家居厨房用品）。不同类目给不同关键词。
+每个类目在每个站点发现${kwCount}个关键词。
+
+返回格式（只返回JSON，不要markdown标记）：{"keywords":[{"id":"唯一ID","keyword":"英文词","keyword_zh":"中文","category":"所属类目","site":"us/ca/uk","price_range":{"min":数字,"max":数字,"typical":数字},"currency":"$","market":{"monthly_search_volume":数字,"est_monthly_sales_top10":数字,"bsr_range":"如#500-#2000","demand_type":"evergreen/seasonal/trending","trend":"growing/stable/declining"},"competition":{"top1_review_count":数字,"top10_avg_reviews":数字,"search_result_count":数字,"new_seller_opportunity":"high/medium/low","top_seller_concentration":"high/medium/low","main_pain_points":["痛点1","痛点2"]},"profitability":{"est_purchase_cost_usd":数字,"est_fba_fee":数字,"amazon_referral_fee_pct":0.15,"est_net_margin":小数,"min_price_threshold":数字},"differentiation":{"opportunity_level":"high/medium/low","angles":["方向1","方向2"],"sku_expansion":"easy/medium/hard"},"ip_risk":{"patent_risk":"none/low/high","trademark_risk":"none/low/high","certification_required":[],"category_gate":false},"logistics":{"est_weight_lbs":数字,"est_dimensions":"如6x4x2in","is_hazmat":false,"is_fragile":false,"fba_friendly":true},"supply_chain":{"min_order_qty":数字,"est_unit_cost_cny":数字,"supplier_count_1688":"many/medium/few","capital_cycle_days":数字},"scores":{"d1_market":整数,"d2_competition":整数,"d3_profit":整数,"d4_differentiation":整数,"d5_ip_safety":整数,"d6_logistics":整数,"d7_supply_chain":整数},"red_flags":[],"green_flags":[],"why_this":"推荐理由50字内","differentiation_strategy":"差异化建议"}]}`;
+  setLdStep('Claude AI 生成7维度分析...');setLdPct(45);
+  const workerUrl = CFG.workerUrl||'';
+  const apiKey    = CFG.apiKey||'';
+  const endpoint  = workerUrl ? workerUrl+'/api/claude' : 'https://api.anthropic.com/v1/messages';
+  const hdrs={'Content-Type':'application/json'};
+  if(workerUrl){ hdrs['X-Access-Password']=CFG.password||''; }
+  else if(apiKey){ hdrs['x-api-key']=apiKey; hdrs['anthropic-version']='2023-06-01'; }
+  const resp=await fetch(endpoint,{method:'POST',headers:hdrs,body:JSON.stringify({model:curModel,max_tokens:6000,messages:[{role:'user',content:prompt}]})});
+  if(!resp.ok)throw new Error('API '+resp.status);
+  setLdStep('解析结果...');setLdPct(85);
+  const data=await resp.json();
+  const text=data.content.map(c=>c.text||'').join('');
+  const clean=text.replace(/```json|```/g,'').trim();
+  allKws=JSON.parse(clean).keywords||[];
+  setLdPct(100);
+}
+
+// FIX: Use correct category data from DPOOL (not fallback)
+function genDemo(cats,sites){
+  setLdStep('生成演示数据...');setLdPct(50);
+  const kwCount=getKwCount();
+  let id=1;
+  cats.forEach(cat=>{
+    // Use the actual category pool, fall back to Home & Kitchen only if truly missing
+    const pool=DPOOL[cat]||(Object.values(DPOOL)[0]);
+    sites.forEach(site=>{
+      const pm=SPM[site];
+      pool.slice(0,Math.min(kwCount,pool.length)).forEach(d=>{
+        allKws.push({
+          id:`${site}-${cat.replace(/\W/g,'')}-${id++}`,
+          keyword:d.kw,keyword_zh:d.zh,category:cat,site,
+          price_range:{min:+(d.p.t*pm*0.7).toFixed(2),max:+(d.p.t*pm*1.4).toFixed(2),typical:+(d.p.t*pm).toFixed(2)},
+          currency:CURR[site],
+          // FIX: monthly_search_volume is explicitly set here so kcard can read it
+          market:{monthly_search_volume:d.mkt.sv,est_monthly_sales_top10:d.mkt.ms,bsr_range:d.mkt.bsr,demand_type:d.mkt.dt,trend:d.mkt.tr},
+          competition:{top1_review_count:d.comp.t1r,top10_avg_reviews:d.comp.t10r,search_result_count:d.comp.src,new_seller_opportunity:d.comp.opp,top_seller_concentration:d.comp.conc,main_pain_points:d.comp.pp},
+          profitability:{est_purchase_cost_usd:+(d.prof.c*pm).toFixed(2),est_fba_fee:+(d.prof.fba*pm).toFixed(2),amazon_referral_fee_pct:0.15,est_net_margin:d.prof.m,min_price_threshold:d.prof.mp},
+          differentiation:{opportunity_level:d.diff.lvl,angles:d.diff.ang,sku_expansion:d.diff.sku},
+          ip_risk:{patent_risk:d.ip.pr,trademark_risk:d.ip.tr2,certification_required:[...(d.ip.cert||[])],category_gate:d.ip.gate},
+          logistics:{est_weight_lbs:d.log.wt,est_dimensions:d.log.dim,is_hazmat:d.log.haz,is_fragile:d.log.fra,fba_friendly:true},
+          supply_chain:{min_order_qty:d.sup.moq,est_unit_cost_cny:d.sup.cny,supplier_count_1688:d.sup.s,capital_cycle_days:d.sup.cy},
+          scores:{d1_market:d.sc.d1,d2_competition:d.sc.d2,d3_profit:d.sc.d3,d4_differentiation:d.sc.d4,d5_ip_safety:d.sc.d5,d6_logistics:d.sc.d6,d7_supply_chain:d.sc.d7},
+          red_flags:[...d.rf],green_flags:[...d.gf],why_this:d.why,differentiation_strategy:d.ds,data_source:'demo'
+        });
+      });
+    });
+  });
+  setLdPct(100);
+}
+
+function gv(kw){const s=kw.scores;return[s.d1_market??s.d1??50,s.d2_competition??s.d2??50,s.d3_profit??s.d3??50,s.d4_differentiation??s.d4??50,s.d5_ip_safety??s.d5??50,s.d6_logistics??s.d6??50,s.d7_supply_chain??s.d7??50]}
+function getW(){return[1,2,3,4,5,6,7].map(i=>+document.getElementById('dw'+i).value)}
+function calcT(kw){const w=getW(),v=gv(kw),tw=w.reduce((a,b)=>a+b,0);return Math.round(v.reduce((s,x,i)=>s+x*w[i],0)/tw)}
+function getG(s){return s>=82?'S':s>=70?'A':s>=55?'B':s>=40?'C':'D'}
+function recalc(){
+  const exP=document.getElementById('exPat').checked,exS=document.getElementById('exSeas').checked,nD=document.getElementById('needDiff').checked,mW=+document.getElementById('maxWt').value;
+  allKws.forEach(k=>{k._t=calcT(k);k._g=getG(k._t);k._v=false;if(exP&&k.ip_risk?.patent_risk==='high')k._v=true;if(exS&&k.market?.demand_type==='seasonal')k._v=true;if(nD&&k.differentiation?.opportunity_level==='low')k._v=true;if((k.logistics?.est_weight_lbs/2.205)>mW)k._v=true;if(k._v)k._g='D'});
+}
+function renderKws(){
+  let kws=allKws.filter(k=>{if(!actSites[k.site])return false;if(gF==='S'&&k._g!=='S')return false;if(gF==='A'&&k._g!=='A')return false;if(gF==='B'&&k._g!=='B')return false;if(gF==='CD'&&!['C','D'].includes(k._g))return false;if(sF!=='all'&&k.site!==sF)return false;return true});
+  kws.sort((a,b)=>{if(sK==='score')return b._t-a._t;if(sK==='sales')return(b.market?.est_monthly_sales_top10||0)-(a.market?.est_monthly_sales_top10||0);const dk={d1:'d1_market',d2:'d2_competition',d3:'d3_profit',d4:'d4_differentiation'}[sK];return dk?(b.scores[dk]||0)-(a.scores[dk]||0):b._t-a._t});
+  const _rc=document.getElementById('resCount');if(_rc)_rc.textContent=`${kws.length} 个机会`;
+  if(!kws.length){const _kl=document.getElementById('kwList');if(_kl)_kl.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">无符合条件的结果</div>';return}
+  const _kwl=document.getElementById('kwList');if(_kwl)_kwl.innerHTML=kws.map(k=>kcard(k)).join('');
+}
+
+function kcard(k){
+  const dv=gv(k);
+  // FIX: Correctly read monthly_search_volume from market object
+  const sv=k.market?.monthly_search_volume||0;
+  const svT=sv>=1000?`${(sv/1000).toFixed(0)}K`:sv>0?`${sv}`:'–';
+  const tC=k.market?.trend==='growing'?'t-up':k.market?.trend==='declining'?'t-dn':'t-st';
+  const tT=k.market?.trend==='growing'?'↑增':k.market?.trend==='declining'?'↓降':'→稳';
+  const flags=[...(k.red_flags||[]).slice(0,2).map(f=>`<span class="rflag">⚠ ${f}</span>`), ...(k.green_flags||[]).slice(0,3).map(f=>`<span class="gflag">✓ ${f}</span>`)];
+  const isP=cmpPicks.includes(k.id);
+  return`<div class="kcard grade-${k._g}${isP?' compare-pick':''}" onclick="selKw('${k.id}')" id="kc-${k.id}">
+<div class="kc-cmp" onclick="event.stopPropagation();togCmp('${k.id}')">${isP?'✓':''}</div>
+<div class="kc-top"><div>
+<div class="kc-kw">${k.keyword}</div><div class="kc-kw-zh">${k.keyword_zh||''}</div>
+<div class="kc-meta">
+<span class="kmt"><span class="sdot ${k.site}"></span>${SITES[k.site]}</span>
+<span class="kmt">📦 ${k.category}</span>
+<span class="kmt sv">🔍 月搜 ${svT}</span>
+<span class="kmt">💰 ${k.currency}${k.price_range?.typical||'--'}</span>
+<span class="kmt ${tC}">${tT}</span>
+<span class="kmt" style="color:${k.data_source==='demo'?'var(--t3)':'var(--gold)'}">${k.data_source==='demo'?'演示':'AI'}</span>
+</div></div>
+<div class="sring grade-${k._g}"><div class="sr-n">${k._t}</div><div class="sr-g">${k._g}级</div></div>
+</div>
+<div class="kc-dims">${dv.map((v,i)=>`<div class="dm"><div class="dm-bar"><div class="dm-fill" style="height:${v}%;background:${DC[i]}"></div></div><div class="dm-label" style="color:${DC[i]}">${DS[i]}</div><div class="dm-val" style="color:${DC[i]}">${v}</div></div>`).join('')}</div>
+${flags.length?`<div class="kc-flags">${flags.join('')}</div>`:''}
+</div>`;
+}
+
+function selKw(id){
+  if(cmpMode){togCmp(id);return}
+  document.querySelectorAll('.kcard').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('kc-'+id)?.classList.add('selected');
+  const k=allKws.find(x=>x.id===id);if(!k)return;
+  document.getElementById('rightHdTxt').textContent=k.keyword;
+  document.getElementById('rightHdSub').textContent=SITES[k.site];
+  const dv=gv(k);
+  const sv=k.market?.monthly_search_volume||0;
+  const svT=sv>=1000?`${(sv/1000).toFixed(0)}K次/月`:sv>0?`${sv}次/月`:'--';
+  const price=k.price_range?.typical||0;
+  const cost=k.profitability?.est_purchase_cost_usd||0;
+  const fba=k.profitability?.est_fba_fee||0;
+  const ref=price*(k.profitability?.amazon_referral_fee_pct||0.15);
+  const net=(price-cost-fba-ref).toFixed(2);
+  const m=k.profitability?.est_net_margin||0;
+  const dims=[
+    {n:'① 市场容量',c:'var(--d1)',v:dv[0],b:[`月搜索量：${svT}`,`Top10月销量：~${(k.market?.est_monthly_sales_top10||0).toLocaleString()}件`,`BSR区间：${k.market?.bsr_range||'--'}`,`需求类型：${k.market?.demand_type==='evergreen'?'🟢 常年稳定':k.market?.demand_type==='seasonal'?'⚠️ 季节性':'📈 新兴趋势'}`,`趋势：${k.market?.trend==='growing'?'↑ 增长中':k.market?.trend==='declining'?'↓ 下降':'→ 稳定'}`]},
+    {n:'② 竞争程度',c:'var(--d2)',v:dv[1],b:[`Top1评价数：${(k.competition?.top1_review_count||0).toLocaleString()}`,`Top10均评价：${(k.competition?.top10_avg_reviews||0).toLocaleString()}`,`搜索结果：${(k.competition?.search_result_count||0).toLocaleString()}条`,`新卖家机会：${k.competition?.new_seller_opportunity==='high'?'✅ 高':k.competition?.new_seller_opportunity==='medium'?'🟡 中':'🔴 低'}`,...(k.competition?.main_pain_points||[]).map(p=>`痛点："${p}"`)].filter(Boolean)},
+    {n:'③ 盈利空间',c:'var(--d3)',v:dv[2],b:[`典型售价：${k.currency}${price}`,`1688采购估：$${cost}`,`FBA费用估：$${fba}`,`亚马逊佣金：~${((k.profitability?.amazon_referral_fee_pct||0.15)*100).toFixed(0)}%`,`估算净利润率：${(m*100).toFixed(0)}%`,`最低客单价：$${k.profitability?.min_price_threshold||15}`]},
+    {n:'④ 差异化机会',c:'var(--d4)',v:dv[3],b:[`差异化空间：${k.differentiation?.opportunity_level==='high'?'✅ 大':k.differentiation?.opportunity_level==='medium'?'🟡 中':'🔴 小'}`,...(k.differentiation?.angles||[]).map(a=>`方向："${a}"`),`SKU扩展：${k.differentiation?.sku_expansion||'--'}`,k.differentiation_strategy?`策略：${k.differentiation_strategy}`:''].filter(Boolean)},
+    {n:'⑤ 侵权安全',c:'var(--d5)',v:dv[4],b:[`专利风险：${k.ip_risk?.patent_risk==='none'?'✅ 无':'⚠️ '+k.ip_risk?.patent_risk}`,`商标风险：${k.ip_risk?.trademark_risk==='none'?'✅ 无':'⚠️ '+k.ip_risk?.trademark_risk}`,`认证要求：${(k.ip_risk?.certification_required||[]).join(', ')||'无'}`,`类目审核：${k.ip_risk?.category_gate?'⚠️ 需审核':'✅ 无需审核'}`]},
+    {n:'⑥ 物流友好',c:'var(--d6)',v:dv[5],b:[`重量估算：${(k.logistics?.est_weight_lbs/2.205).toFixed(2)}kg ${k.logistics?.est_weight_lbs/2.205<0.5?'✅ 极轻':k.logistics?.est_weight_lbs/2.205<1.4?'🟡 良好':'⚠️ 较重'}`,`尺寸估算：${k.logistics?.est_dimensions||'--'}`,`危险品：${k.logistics?.is_hazmat?'⚠️ 是':'✅ 否'}`,`FBA友好：${k.logistics?.fba_friendly?'✅ 是':'🟡 建议自发货'}`]},
+    {n:'⑦ 资金供应链',c:'var(--d7)',v:dv[6],b:[`建议起订量：${k.supply_chain?.min_order_qty||'--'}件`,`1688单价估：¥${k.supply_chain?.est_unit_cost_cny||'--'}`,`1688供应商：${k.supply_chain?.supplier_count_1688==='many'?'✅ 充足':'⚠️ '+k.supply_chain?.supplier_count_1688}`,`资金周转：约${k.supply_chain?.capital_cycle_days||'--'}天`]}
+  ];
+  document.getElementById('rightBody').innerHTML=`
+<div class="det-kw">${k.keyword}</div><div class="det-kw-zh">${k.keyword_zh||''}</div>
+<div class="det-sub"><span>${SITES[k.site]}</span><span>📦 ${k.category}</span><span style="color:${k.data_source==='demo'?'var(--t3)':'var(--gold)'}">${k.data_source==='demo'?'演示数据':'Claude AI分析'}</span></div>
+${k.why_this?`<div class="why-box"><strong>💡 推荐理由：</strong>${k.why_this}</div>`:''}
+${radar(dv)}
+<div class="cost-tbl"><div class="ct-title">成本拆解估算</div>
+<div class="ct-row"><span class="ct-l">售价</span><span class="ct-v">${k.currency}${price}</span></div>
+<div class="ct-row"><span class="ct-l">1688采购</span><span class="ct-v neg">-$${cost}</span></div>
+<div class="ct-row"><span class="ct-l">FBA费用</span><span class="ct-v neg">-$${fba}</span></div>
+<div class="ct-row"><span class="ct-l">亚马逊佣金15%</span><span class="ct-v neg">-$${ref.toFixed(2)}</span></div>
+<div class="ct-row"><span class="ct-l">净利润估算</span><span class="ct-v ${+net>0?'pos':'neg'}">${k.currency}${net} (~${(m*100).toFixed(0)}%)</span></div>
+</div>
+${dims.map((d,i)=>`<div class="dd" id="dd${i}"><div class="dd-hd" onclick="tDD(${i})"><div class="dd-dot" style="background:${d.c}"></div><div class="dd-name" style="color:${d.c}">${d.n}</div><div class="dd-sc" style="color:${d.c}">${d.v}</div><div class="dd-arr">›</div></div><div class="dd-body"><div class="dd-track"><div class="dd-fill" style="width:${d.v}%;background:${d.c}"></div></div><ul class="dd-list">${d.b.map(b=>`<li>${b}</li>`).join('')}</ul></div></div>`).join('')}
+<div class="act-box"><div class="act-title">🎯 下一步行动</div>
+<div class="act-step"><span class="act-n">①</span>1688搜"${k.keyword_zh||k.keyword}"，联系3-5家供应商报价</div>
+<div class="act-step"><span class="act-n">②</span>Amazon FBA Calculator精确核算成本</div>
+<div class="act-step"><span class="act-n">③</span>分析竞品差评，验证"${(k.competition?.main_pain_points||['--'])[0]}"是否普遍</div>
+${k.ip_risk?.patent_risk!=='none'?`<div class="act-step"><span class="act-n">⚠️</span>先查专利：<a href="https://patents.google.com" target="_blank" style="color:var(--accent)">patents.google.com</a></div>`:''}
+<div class="act-step"><span class="act-n">④</span>${k.differentiation_strategy||'参考上方差异化建议'}</div>
+</div>
+<div class="det-btns">
+<a href="https://www.${DOM[k.site]}/s?k=${encodeURIComponent(k.keyword)}" target="_blank" style="flex:1">
+<button class="btn btn-acc" style="width:100%">🔗 亚马逊搜索 ${SITES[k.site]}</button></a>
+<button class="btn btn-ghost" onclick="copyTxt('${k.keyword.replace(/'/g,"\\'")}')">📋</button>
+</div>`;
+  // Auto-expand first 3 dimensions
+  [0,1,2].forEach(i=>tDD(i,true));
+  // Trigger real 3-country patent search
+  const patDiv=document.createElement('div');patDiv.id='pat-'+id;
+  const costTbl=document.getElementById('rightBody').querySelector('.cost-tbl');
+  if(costTbl)costTbl.insertAdjacentElement('afterend',patDiv);
+  searchPatents(k.keyword,'pat-'+id);
+}
+
+function tDD(i,open){
+  const el=document.getElementById('dd'+i);if(!el)return;
+  if(open)el.classList.add('open');
+  else el.classList.toggle('open');
+  const f=el.querySelector('.dd-fill');
+  if(f&&el.classList.contains('open')){const w=f.style.width;f.style.width='0';setTimeout(()=>f.style.width=w,30)}
+}
+
+function radar(vals){
+  const W=220,cx=110,cy=118,R=82,n=7;
+  const labels=['需求','竞争','利润','差异化','侵权安全','物流','供应链'];
+  const angs=Array.from({length:n},(_,i)=>(i*2*Math.PI/n)-Math.PI/2);
+  const pt=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  let rings='';[20,40,60,80,100].forEach(p=>{const ps=angs.map(a=>pt(R*p/100,a));rings+=`<polygon points="${ps.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e2e6ed" stroke-width="1"/>`;});
+  const axes=angs.map(a=>{const[x2,y2]=pt(R,a);return`<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#e2e6ed" stroke-width="1"/>`;}).join('');
+  const dps=vals.map((v,i)=>pt(R*Math.min(100,v)/100,angs[i]));
+  const poly=`<polygon points="${dps.map(p=>p.join(',')).join(' ')}" fill="rgba(255,87,34,.15)" stroke="var(--accent)" stroke-width="1.5"/>`;
+  const dots=dps.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${DC[i]}"/>`).join('');
+  const lbls=angs.map((a,i)=>{const[x,y]=pt(R+16,a);const anc=Math.cos(a)>0.1?'start':Math.cos(a)<-0.1?'end':'middle';return`<text x="${x}" y="${y}" text-anchor="${anc}" dominant-baseline="middle" font-size="9" fill="${DC[i]}" font-family="Noto Sans SC">${labels[i]}</text>`;}).join('');
+  return`<div class="radar-wrap"><svg width="${W}" height="236" viewBox="0 0 ${W} 236">${rings}${axes}${poly}${dots}${lbls}</svg></div>`;
+}
+
+function toggleCmp(){
+  cmpMode=!cmpMode;cmpPicks=[];
+  const btn=document.getElementById('cmpToggle');
+  btn.classList.toggle('active',cmpMode);btn.textContent=cmpMode?'退出对比':'对比模式';
+  document.querySelector('.cbody').classList.toggle('compare-mode',cmpMode);
+  document.getElementById('rightBody').style.display=cmpMode?'none':'block';
+  document.getElementById('cmpView').classList.toggle('on',cmpMode);
+  if(!cmpMode){renderKws();document.getElementById('cmpContent').innerHTML=''}
+}
+function togCmp(id){
+  if(!cmpMode)return;
+  if(cmpPicks.includes(id))cmpPicks=cmpPicks.filter(x=>x!==id);
+  else{if(cmpPicks.length>=3){toast('最多对比3个','info');return}cmpPicks.push(id)}
+  renderKws();renderCmp();
+}
+function renderCmp(){
+  const picks=cmpPicks.map(id=>allKws.find(k=>k.id===id)).filter(Boolean);
+  const el=document.getElementById('cmpContent');
+  if(!picks.length){el.innerHTML='<div style="font-size:11px;color:var(--t3);text-align:center;padding:20px">请在列表中勾选关键词</div>';return}
+  const CK=['#ff5722','#00e676','#2979ff'];
+  let h=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">${picks.map((k,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px"><div style="width:9px;height:9px;border-radius:50%;background:${CK[i]};flex-shrink:0"></div><span style="color:${CK[i]};font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${k.keyword}</span><span style="color:var(--t3);font-size:10px;flex-shrink:0">${SITES[k.site]}</span></div>`).join('')}</div>`;
+  DN.forEach((dim,di)=>{
+    h+=`<div style="margin-bottom:9px"><div style="font-size:10px;color:var(--t3);margin-bottom:3px;display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:50%;background:${DC[di]}"></div>${dim}</div>`;
+    picks.forEach((k,ki)=>{const v=gv(k)[di];h+=`<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px"><div style="font-size:9px;color:var(--t3);width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${k.keyword.split(' ').slice(0,2).join(' ')}</div><div style="flex:1;height:11px;background:var(--s3);border-radius:2px;overflow:hidden"><div style="height:100%;width:${v}%;background:${CK[ki]};border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:2px"><span style="font-size:8px;color:#000;font-weight:700">${v>15?v:''}</span></div></div><div style="font-size:9px;font-family:monospace;color:${CK[ki]};width:18px;text-align:right">${v}</div></div>`;});
+    h+='</div>';
+  });
+  h+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)"><div style="font-size:10px;color:var(--t3);margin-bottom:5px">综合评分</div>${picks.map((k,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-size:11px"><span style="color:${CK[i]};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${k.keyword.split(' ').slice(0,3).join(' ')}</span><span style="font-family:monospace;color:${CK[i]};font-weight:700;margin-left:5px">${k._t} ${k._g}</span></div>`).join('')}</div>`;
+  el.innerHTML=h;
+}
+function fGrade(g,el){gF=g;document.querySelectorAll('.cbar .fchip').forEach(c=>{if(!c.id?.startsWith('fs-'))c.classList.remove('on')});el.classList.add('on');renderKws()}
+function fSite(s,el){sF=sF===s?'all':s;['us','ca','uk'].forEach(x=>document.getElementById('fs-'+x)?.classList.remove('on'));if(sF!=='all')el.classList.add('on');renderKws()}
+function sortBy(v){sK=v;renderKws()}
+function resetAll(){
+  allKws=[];cmpPicks=[];cmpMode=false;
+  document.getElementById('cbody').innerHTML='';
+  const es=document.getElementById('emptyState');
+  if(es)es.style.display='flex';
+  document.getElementById('cbar').style.display='none';
+  document.getElementById('resetBtn').style.display='none';
+  document.getElementById('rightHdTxt').textContent='7维度分析';
+  document.getElementById('rightHdSub').textContent='';
+  document.getElementById('rightBody').innerHTML=`<div class="rp-empty">
+  <div class="rp-empty-ico">🎯</div>
+  <div class="rp-empty-hint">点击中间任意关键词<br>查看7维度详细分析</div>
+  <div class="rp-guide-steps">
+    <div class="rp-gs"><span class="rp-gs-n">①</span>左侧勾选类目并设定偏好</div>
+    <div class="rp-gs"><span class="rp-gs-n">②</span>点击「发现选品机会」</div>
+    <div class="rp-gs"><span class="rp-gs-n">③</span>点击卡片查看7维详情</div>
+    <div class="rp-gs"><span class="rp-gs-n">④</span>开启对比模式同时分析3个</div>
+  </div>
+</div>`;
+  document.getElementById('rightBody').style.display='block';
+  document.getElementById('cmpView').classList.remove('on');
+  document.getElementById('cmpToggle').classList.remove('active');
+  document.getElementById('cmpToggle').textContent='对比模式';
+  setPhase(1);
+}
+function exportCSV(){
+  const kws=allKws.filter(k=>actSites[k.site]);
+  if(!kws.length){toast('暂无数据','err');return}
+  const h=['关键词','中文','站点','类目','售价','货币','月搜索量','月销量Top10','净利润率','重量kg','新卖家机会','差异化空间','专利风险','综合分','评级'];
+  const rows=kws.map(k=>[`"${k.keyword}"`,`"${k.keyword_zh||''}"`,k.site.toUpperCase(),`"${k.category}"`,k.price_range?.typical,k.currency,k.market?.monthly_search_volume,k.market?.est_monthly_sales_top10,((k.profitability?.est_net_margin||0)*100).toFixed(0)+'%',(k.logistics?.est_weight_lbs/2.205).toFixed(2),k.competition?.new_seller_opportunity,k.differentiation?.opportunity_level,k.ip_risk?.patent_risk,k._t,k._g]);
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`选品机会_${new Date().toISOString().slice(0,10)}.csv`;a.click();toast('已导出CSV','ok');
+}
+function showLoad(on,t,s){document.getElementById('loading').classList.toggle('on',on);if(t)document.getElementById('ldTitle').textContent=t;if(s)document.getElementById('ldStep').textContent=s;if(!on)document.getElementById('ldBar').style.width='0%'}
+function setLdStep(s){document.getElementById('ldStep').textContent=s}
+function setLdPct(p){document.getElementById('ldBar').style.width=p+'%'}
+function setPhase(n){[1,2,3,4].forEach(i=>{const el=document.getElementById('ph'+i);el.classList.remove('active','done');if(i<n)el.classList.add('done');else if(i===n)el.classList.add('active')})}
+function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast on ${type||''}`;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),3500)}
+function copyTxt(t){navigator.clipboard.writeText(t).then(()=>toast('已复制','ok'))}
+
+// ==================== MODEL SWITCHER ====================
+let curModel='claude-sonnet-4-20250514';
+// ─── 每类目发现数量 ───
+function getKwCount(){
+  const sel = document.getElementById('kwCount');
+  if(!sel) return 10;
+  if(sel.value === 'custom'){
+    const n = parseInt(document.getElementById('kwCountCustom')?.value) || 10;
+    return Math.min(50, Math.max(1, n));
+  }
+  return parseInt(sel.value) || 10;
+}
+function onKwCountChange(v){
+  const wrap = document.getElementById('kwCountCustomWrap');
+  if(wrap) wrap.style.display = v === 'custom' ? 'block' : 'none';
+}
+
+// ─── 资金预算 ───
+function getBudgetLabel(){
+  const sel = document.getElementById('budget');
+  if(!sel) return '$3000-$15000';
+  if(sel.value === 'custom'){
+    const mn = document.getElementById('budgetCustomMin')?.value || '0';
+    const mx = document.getElementById('budgetCustomMax')?.value || '';
+    return mx ? `$${mn}-$${mx}` : `$${mn}以上`;
+  }
+  const map = {small:'$3000以下', mid:'$3000-$15000', large:'$15000以上'};
+  return map[sel.value] || '$3000-$15000';
+}
+function onBudgetChange(v){
+  const wrap = document.getElementById('budgetCustomWrap');
+  if(wrap) wrap.style.display = v === 'custom' ? 'block' : 'none';
+}
+
+function toggleModelMenu(){
+  document.getElementById('modelMenu').classList.toggle('open');
+}
+
+// ─── 自定义模型 ───
+function openCustomModel(){
+  // 阻止点击穿透关闭菜单
+  const area = document.getElementById('customModelInputArea');
+  if(!area) return;
+  const isOpen = area.style.display !== 'none';
+  area.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen){
+    // 聚焦输入框
+    setTimeout(()=>{
+      const inp = document.getElementById('customModelId');
+      if(inp) inp.focus();
+    }, 50);
+  }
+}
+
+function confirmCustomModel(){
+  const inp = document.getElementById('customModelId');
+  if(!inp) return;
+  const id = inp.value.trim();
+  if(!id){ toast('请输入模型 ID，例如 claude-3-5-sonnet-20241022','err'); return; }
+
+  // 更新 CFG
+  CFG.model = id;
+  localStorage.setItem('scout_model', id);
+
+  // 更新顶部胶囊显示
+  const pillEl = document.getElementById('modelPillName');
+  if(pillEl) pillEl.textContent = id.length > 14 ? id.slice(0,14)+'…' : id;
+
+  // 更新描述文字
+  const descEl = document.getElementById('customModelDesc');
+  if(descEl) descEl.textContent = id;
+
+  // 更新勾选状态
+  document.querySelectorAll('.model-opt').forEach(o => {
+    const chk = o.querySelector('.model-check');
+    if(chk) chk.textContent = '';
+    o.classList.remove('active');
+  });
+  const customOpt = document.getElementById('customModelOpt');
+  if(customOpt){
+    customOpt.classList.add('active');
+    const chk = customOpt.querySelector('.model-check');
+    if(chk) chk.textContent = '✓';
+  }
+
+  // 关闭输入区和菜单
+  document.getElementById('customModelInputArea').style.display = 'none';
+  document.getElementById('modelMenu').classList.remove('open');
+  toast('✅ 已切换：' + id, 'ok');
+}
+function setModel(id,name,el){
+  curModel=id;
+  document.getElementById('modelPillName').textContent=name;
+  document.querySelectorAll('.model-opt').forEach(o=>{o.classList.remove('active');o.querySelector('.model-check').textContent='';});
+  el.classList.add('active');el.querySelector('.model-check').textContent='✓';
+  document.getElementById('modelMenu').classList.remove('open');
+  toast('已切换：'+name,'info');
+}
+
+// ==================== API CONFIG ====================
+function checkApiCfg(){
+  // 基于 CFG 对象更新顶部状态（已无左侧面板输入框）
+  const modelDot = document.querySelector('.model-dot');
+  if(CFG.workerUrl){ if(modelDot) modelDot.style.background='var(--green)'; }
+  else if(CFG.apiKey){ if(modelDot) modelDot.style.background='var(--gold)'; }
+  else { if(modelDot) modelDot.style.background='var(--t3)'; }
+}
+
+// ─── Worker / API Key 配置弹窗 ───
+function openWorkerConfig(){
+  let modal = document.getElementById('workerModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'workerModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(30,40,60,.55);backdrop-filter:blur(4px)';
+    modal.innerHTML = `
+<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:24px;width:460px;max-height:85vh;overflow-y:auto">
+  <div style="font-size:15px;font-weight:600;margin-bottom:4px">⚙️ 算力配置</div>
+  <div style="font-size:11px;color:var(--t3);margin-bottom:18px">配置后启用真实 AI 分析与三国专利查询</div>
+  <div style="font-size:10px;color:var(--gold);background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:6px;padding:8px 10px;margin-bottom:14px;line-height:1.7">
+    <b>推荐：Cloudflare Worker</b>（团队共用，API Key 安全存在云端）<br>
+    <b>备用：直填 API Key</b>（仅限个人本地使用，有 CORS 限制）
+  </div>
+  <div style="margin-bottom:12px">
+    <label style="font-size:10px;color:var(--t3);display:block;margin-bottom:4px">Cloudflare Worker URL</label>
+    <input type="text" id="cfgWorkerUrl" placeholder="https://amazon-scout.yourname.workers.dev"
+      style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--t1);padding:8px 10px;font-size:12px;outline:none;font-family:monospace">
+  </div>
+  <div style="margin-bottom:14px">
+    <label style="font-size:10px;color:var(--t3);display:block;margin-bottom:4px">团队访问密码</label>
+    <input type="password" id="cfgPassword" placeholder="Worker 变量中的 ACCESS_PASSWORD"
+      style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--t1);padding:8px 10px;font-size:12px;outline:none">
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
+    <div style="flex:1;height:1px;background:var(--b1)"></div>
+    <span style="font-size:10px;color:var(--t3);white-space:nowrap">或不用 Worker，直接填 API Key</span>
+    <div style="flex:1;height:1px;background:var(--b1)"></div>
+  </div>
+  <div style="margin-bottom:16px">
+    <label style="font-size:10px;color:var(--t3);display:block;margin-bottom:4px">Anthropic API Key（个人本地使用）</label>
+    <input type="password" id="cfgApiKey" placeholder="sk-ant-api03-xxxx"
+      style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--t1);padding:8px 10px;font-size:12px;outline:none">
+    <div style="font-size:9px;color:var(--t3);margin-top:3px">⚠️ 直接填 Key 可能遇到 CORS 限制，团队共用务必用 Worker</div>
+  </div>
+  <div style="margin-bottom:14px;font-size:10px;color:var(--t2);background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:6px;padding:8px 10px;line-height:1.7">
+    🇺🇸 美国专利：USPTO API（免费无需 Key）<br>
+    🇬🇧🇨🇦 英国/加拿大：EPO OPS API（需在 Worker 变量配置 EPO_CLIENT_ID/SECRET）<br>
+    注册：<a href="https://developers.epo.org/user/register" target="_blank" style="color:var(--cyan)">developers.epo.org</a>（免费）
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="saveWorkerConfig()" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:13px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-weight:500">保存并测试连接</button>
+    <button onclick="document.getElementById('workerModal').style.display='none'" style="padding:10px 16px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--t2);font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif">取消</button>
+  </div>
+  <div id="cfgTestResult" style="margin-top:10px;font-size:11px;line-height:1.5;display:none"></div>
+</div>`;
+    document.body.appendChild(modal);
+  }
+  // 填入当前值
+  const wu = document.getElementById('cfgWorkerUrl');
+  const pw = document.getElementById('cfgPassword');
+  const ak = document.getElementById('cfgApiKey');
+  if(wu) wu.value = CFG.workerUrl||'';
+  if(pw) pw.value = CFG.password||'';
+  if(ak) ak.value = CFG.apiKey||'';
+  document.getElementById('cfgTestResult').style.display='none';
+  modal.style.display = 'block';
+}
+
+async function saveWorkerConfig(){
+  const url   = (document.getElementById('cfgWorkerUrl')?.value||'').trim().replace(/\/$/,'');
+  const pwd   = (document.getElementById('cfgPassword')?.value||'').trim();
+  const ak    = (document.getElementById('cfgApiKey')?.value||'').trim();
+  const res   = document.getElementById('cfgTestResult');
+  if(!url && !ak){ res.style.display='block';res.style.color='var(--red)';res.textContent='请填写 Worker URL 或 API Key';return; }
+  res.style.display='block';res.style.color='var(--gold)';res.textContent='⏳ 测试连接中...';
+  // 保存到 CFG
+  CFG.workerUrl=url; CFG.password=pwd; CFG.apiKey=ak;
+  localStorage.setItem('scout_worker_url',url);
+  localStorage.setItem('scout_password',pwd);
+  localStorage.setItem('scout_api_key',ak);
+  if(url){
+    try{
+      const r=await fetch(url+'/api/health',{headers:{'X-Access-Password':pwd}});
+      const d=await r.json();
+      if(r.ok&&d.ok){
+        res.style.color='var(--green)';res.textContent='✅ Worker 连接成功！已就绪';
+        setTimeout(()=>document.getElementById('workerModal').style.display='none',1500);
+      } else { res.style.color='var(--red)';res.textContent='❌ Worker 返回错误：'+JSON.stringify(d); }
+    }catch(e){ res.style.color='var(--red)';res.textContent='❌ 连接失败：'+e.message; }
+  } else {
+    res.style.color='var(--green)';res.textContent='✅ API Key 已保存（本地直连模式）';
+    setTimeout(()=>document.getElementById('workerModal').style.display='none',1200);
+  }
+  checkApiCfg();
+}
+
+// ==================== CAT DROPDOWN ====================
+function toggleCatDd(){document.getElementById('catDdWrap').classList.toggle('open');}
+function closeCatDd(){
+  const w=document.getElementById('catDdWrap');
+  if(w) w.classList.remove('open');
+}
+
+function updateCatLabel(){
+  const cnt=selCats.length;
+  document.getElementById('catDropCount').textContent='已选 '+cnt;
+  const lbl=cnt===0?'点击展开选择类目...':(cnt<=2?selCats.join('、'):selCats.slice(0,2).join('、')+' +' +(cnt-2));
+  document.getElementById('catDdLabel').textContent=lbl;
+}
+
+// ==================== PATENT SEARCH (3-country real APIs) ====================
+async function searchPatents(keyword,containerId){
+  const el=document.getElementById(containerId);if(!el)return;
+  el.innerHTML=renderPatentLoading();
+  const terms=keyword.split(' ').slice(0,3).join(' ');
+  const results={us:null,uk:null,ca:null};
+
+  // US: USPTO PatentsView PatentSearch API (free, requires API key from search.patentsview.org)
+  try{
+    const q=encodeURIComponent(JSON.stringify({"_text_phrase":{"patent_title":terms}}));
+    const f=encodeURIComponent(JSON.stringify(["patent_id","patent_title","patent_date","assignee_organization"]));
+    const url=`https://search.patentsview.org/api/v1/patent/?q=${q}&f=${f}&o=${encodeURIComponent(JSON.stringify({"size":5}))}`;
+    const r=await fetch(url);
+    if(r.status===403||r.status===401||r.status===429){
+      results.us={count:'需API Key',items:[],link:`https://search.patentsview.org/app/search/?q=${encodeURIComponent(JSON.stringify({"_text_phrase":{"patent_title":terms}}))}`};
+    } else if(r.ok){
+      const d=await r.json();
+      const items=(d.patents||[]).slice(0,3).map(p=>({
+        title:p.patent_title||'',date:(p.patent_date||'').slice(0,7),
+        assignee:(p.assignees?.[0]?.assignee_organization)||'个人',
+        link:`https://patents.google.com/patent/US${p.patent_id}`
+      }));
+      results.us={count:d.total_hits||0,items};
+    } else throw new Error('http '+r.status);
+  }catch(e){
+    results.us={count:'查询失败',items:[],link:`https://patents.google.com/?q=${encodeURIComponent(terms)}&country=US`};
+  }
+
+  // UK: EPO OPS requires server-side OAuth2 → Espacenet direct link (GB patents)
+  // CA: Same → Espacenet CA patents
+  const encTerms=encodeURIComponent(terms);
+  results.uk={link:`https://worldwide.espacenet.com/patent/search?q=ctxt%3D%22${encTerms}%22&PN=GB`,note:'EPO Espacenet · 130M+专利 含全部GB专利'};
+  results.ca={link:`https://worldwide.espacenet.com/patent/search?q=ctxt%3D%22${encTerms}%22&PN=CA`,note:'EPO Espacenet · CIPO数据库260万+加拿大专利'};
+
+  el.innerHTML=renderPatentResults(results,terms);
+}
+
+function renderPatentLoading(){
+  return`<div class="pat-box"><div class="pat-hd"><div class="pat-title">⚖️ 三国专利数据库查询</div><span class="pat-badge loading">查询中</span></div>${['🇺🇸 US · USPTO PatentsView','🇬🇧 UK · EPO Espacenet','🇨🇦 CA · EPO Espacenet'].map(c=>`<div class="pat-country-row"><span class="pat-flag">${c[0]}</span><div class="pat-country-info"><div class="pat-country-name">${c}</div></div><span class="pat-count pld">检索中...</span></div>`).join('')}</div>`;
+}
+
+function renderPatentResults(results,terms){
+  const us=results.us,uk=results.uk,ca=results.ca;
+  const usN=typeof us.count==='number';
+  const usBadge=!usN?`<span class="pat-badge warn">需核查</span>`:us.count===0?`<span class="pat-badge safe">US暂无匹配</span>`:us.count<=5?`<span class="pat-badge warn">US ${us.count}件</span>`:`<span class="pat-badge danger">US ${us.count}件专利</span>`;
+  let html=`<div class="pat-box"><div class="pat-hd"><div class="pat-title">⚖️ 三国专利数据库</div><div>${usBadge}</div></div>`;
+
+  // US row
+  html+=`<div class="pat-country-row"><span class="pat-flag">🇺🇸</span><div class="pat-country-info"><div class="pat-country-name">美国 · USPTO PatentsView</div>`;
+  if(us.items&&us.items.length>0){html+=`<div class="pat-result-list">${us.items.map(p=>`<div class="pat-item"><div class="pat-item-title">${p.title}</div><div class="pat-item-meta"><span>${p.date}</span><span>${p.assignee}</span><a class="pat-item-link" href="${p.link}" target="_blank">查看↗</a></div></div>`).join('')}</div>`;}
+  html+=`</div><span class="pat-count ${usN&&us.count===0?'zero':usN&&us.count<=5?'low':'high'}">${usN?us.count+'件':us.count}</span></div>`;
+
+  // UK row
+  html+=`<div class="pat-country-row"><span class="pat-flag">🇬🇧</span><div class="pat-country-info"><div class="pat-country-name">英国 · EPO Espacenet</div><div style="font-size:9px;color:var(--t3)">${uk.note}</div></div><a class="pat-manual-btn" href="${uk.link}" target="_blank">查询↗</a></div>`;
+
+  // CA row
+  html+=`<div class="pat-country-row"><span class="pat-flag">🇨🇦</span><div class="pat-country-info"><div class="pat-country-name">加拿大 · EPO Espacenet</div><div style="font-size:9px;color:var(--t3)">${ca.note}</div></div><a class="pat-manual-btn" href="${ca.link}" target="_blank">查询↗</a></div>`;
+
+  const g=`https://patents.google.com/?q=${encodeURIComponent(terms)}&country=US,GB,CA`;
+  html+=`<div class="pat-src">数据源：<a class="pat-manual-btn" href="https://search.patentsview.org/" target="_blank">USPTO↗</a><a class="pat-manual-btn" href="https://worldwide.espacenet.com" target="_blank">EPO↗</a><a class="pat-manual-btn" href="${g}" target="_blank">Google Patents↗</a></div>`;
+  html+=`<div style="font-size:9px;color:var(--t3);margin-top:4px">UK/CA 点击链接在 Espacenet 实时查询 · 配置Worker后可全自动</div></div>`;
+  return html;
+}
+
+const LS=['Claude AI 分析类目市场结构...','识别高搜索量低竞争关键词...','评估头部Listing集中度...','计算盈利空间与成本结构...','挖掘现有产品差异化痛点...','检查专利商标侵权风险...','评估物流与供应链可行性...','生成7维度综合评分报告...'];
+let lsi=0;setInterval(()=>{if(document.getElementById('loading').classList.contains('on')){lsi=(lsi+1)%LS.length;setLdStep(LS[lsi])}},1600);
+
+// ═══ callClaudeViaWorker：通过 Worker 代理调用 Claude API ═══
+async function callClaudeViaWorker(cats, sites){
+  const kwCount = getKwCount();
+  const pMin = document.getElementById('pMin').value;
+  const pMax = document.getElementById('pMax').value;
+  const tMargin = document.getElementById('tMargin').value;
+  const maxWt = document.getElementById('maxWt').value;
+  const bl = getBudgetLabel();
+  setLdStep('Claude AI 分析市场机会...');setLdPct(20);
+  const prompt = `你是亚马逊跨境电商资深选品顾问。任务：主动为卖家发现高潜力选品关键词。
+目标类目：${cats.join('、')}
+目标站点：${sites.map(s=>SITES[s]+'('+DOM[s]+')').join('、')}
+价格区间：$${pMin}-$${pMax} USD，目标净利润率≥${tMargin}%，最大重量${maxWt}kg，资金预算${bl}
+排除敏感：${document.getElementById('exSens').checked}，排除侵权：${document.getElementById('exPat').checked}，排除季节：${document.getElementById('exSeas').checked}
+关键词必须与类目强相关，不同类目给不同关键词，每个类目在每个站点发现${kwCount}个。
+只返回JSON不含markdown：{"keywords":[{"id":"ID","keyword":"英文","keyword_zh":"中文","category":"类目","site":"us/ca/uk","price_range":{"min":0,"max":0,"typical":0},"currency":"$","market":{"monthly_search_volume":0,"est_monthly_sales_top10":0,"bsr_range":"#500-#2000","demand_type":"evergreen","trend":"growing"},"competition":{"top1_review_count":0,"top10_avg_reviews":0,"search_result_count":0,"new_seller_opportunity":"high","top_seller_concentration":"low","main_pain_points":["痛点"]},"profitability":{"est_purchase_cost_usd":0,"est_fba_fee":0,"amazon_referral_fee_pct":0.15,"est_net_margin":0.35,"min_price_threshold":15},"differentiation":{"opportunity_level":"high","angles":["方向"],"sku_expansion":"easy"},"ip_risk":{"patent_risk":"none","trademark_risk":"none","certification_required":[],"category_gate":false},"logistics":{"est_weight_lbs":0.5,"est_dimensions":"6x4x2in","is_hazmat":false,"is_fragile":false,"fba_friendly":true},"supply_chain":{"min_order_qty":200,"est_unit_cost_cny":30,"supplier_count_1688":"many","capital_cycle_days":45},"scores":{"d1_market":80,"d2_competition":75,"d3_profit":82,"d4_differentiation":85,"d5_ip_safety":90,"d6_logistics":95,"d7_supply_chain":88},"red_flags":[],"green_flags":[],"why_this":"推荐理由","differentiation_strategy":"差异化建议"}]}`;
+  setLdStep('发送请求...');setLdPct(45);
+  const workerUrl = CFG.workerUrl||'';
+  const apiKey = CFG.apiKey||'';
+  const endpoint = workerUrl ? workerUrl+'/api/claude' : 'https://api.anthropic.com/v1/messages';
+  const hdrs = {'Content-Type':'application/json'};
+  if(workerUrl){ hdrs['X-Access-Password'] = CFG.password||''; }
+  else if(apiKey){ hdrs['x-api-key']=apiKey; hdrs['anthropic-version']='2023-06-01'; }
+  const resp = await fetch(endpoint,{method:'POST',headers:hdrs,body:JSON.stringify({model:CFG.model||'claude-sonnet-4-20250514',max_tokens:6000,messages:[{role:'user',content:prompt}]})});
+  if(!resp.ok) throw new Error('API HTTP '+resp.status);
+  setLdStep('解析结果...');setLdPct(90);
+  const data = await resp.json();
+  const text = data.content.map(c=>c.text||'').join('');
+  const clean = text.replace(/```json|```/g,'').trim();
+  allKws = JSON.parse(clean).keywords||[];
+  setLdPct(100);
+}
+
+// ═══ renderDetail：渲染右侧7维度详情面板 ═══
+function renderDetail(k){
+  const dv = gv(k);
+  const price = k.price_range?.typical||0;
+  const cost = k.profitability?.est_purchase_cost_usd||0;
+  const fba = k.profitability?.est_fba_fee||0;
+  const ref = price*(k.profitability?.amazon_referral_fee_pct||0.15);
+  const net = (price-cost-fba-ref).toFixed(2);
+  const m = k.profitability?.est_net_margin||0;
+  const sv = k.market?.monthly_search_volume||0;
+  const svT = sv>=1000?`${(sv/1000).toFixed(0)}K次/月`:sv>0?`${sv}次/月`:'--';
+  const DC=['#00e676','#ff9100','#ffb300','#00e5ff','#ff1744','#d500f9','#2979ff'];
+  const dims=[
+    {n:'① 市场容量',c:DC[0],v:dv[0],b:[`月搜索量：${svT}`,`Top10月销量：~${(k.market?.est_monthly_sales_top10||0).toLocaleString()}件`,`BSR区间：${k.market?.bsr_range||'--'}`,`需求类型：${k.market?.demand_type==='evergreen'?'🟢 常年稳定':k.market?.demand_type==='seasonal'?'⚠️ 季节性':'📈 新兴趋势'}`,`趋势：${k.market?.trend==='growing'?'↑ 增长中':k.market?.trend==='declining'?'↓ 下降':'→ 稳定'}`]},
+    {n:'② 竞争程度',c:DC[1],v:dv[1],b:[`Top1评价：${(k.competition?.top1_review_count||0).toLocaleString()}`,`Top10均评：${(k.competition?.top10_avg_reviews||0).toLocaleString()}`,`搜索结果：${(k.competition?.search_result_count||0).toLocaleString()}条`,`新卖家机会：${k.competition?.new_seller_opportunity==='high'?'✅ 高':k.competition?.new_seller_opportunity==='medium'?'🟡 中':'🔴 低'}`,...(k.competition?.main_pain_points||[]).map(p=>`痛点："${p}"`)].filter(Boolean)},
+    {n:'③ 盈利空间',c:DC[2],v:dv[2],b:[`售价：${k.currency||'$'}${price}`,`1688采购：$${cost}`,`FBA费用：$${fba}`,`亚马逊佣金：~${((k.profitability?.amazon_referral_fee_pct||0.15)*100).toFixed(0)}%`,`净利润率：${(m*100).toFixed(0)}%`,`最低客单：$${k.profitability?.min_price_threshold||15}`]},
+    {n:'④ 差异化机会',c:DC[3],v:dv[3],b:[`空间：${k.differentiation?.opportunity_level==='high'?'✅ 大':k.differentiation?.opportunity_level==='medium'?'🟡 中':'🔴 小'}`,...(k.differentiation?.angles||[]).map(a=>`方向："${a}"`),`SKU扩展：${k.differentiation?.sku_expansion||'--'}`,k.differentiation_strategy?`策略：${k.differentiation_strategy}`:''].filter(Boolean)},
+    {n:'⑤ 侵权安全',c:DC[4],v:dv[4],b:[`专利风险（AI预估）：${k.ip_risk?.patent_risk==='none'?'✅ 无':'⚠️ '+k.ip_risk?.patent_risk}`,`商标风险：${k.ip_risk?.trademark_risk==='none'?'✅ 无':'⚠️ '+k.ip_risk?.trademark_risk}`,`认证要求：${(k.ip_risk?.certification_required||[]).join(', ')||'无'}`,`类目审核：${k.ip_risk?.category_gate?'⚠️ 需审核':'✅ 无需审核'}`,`↓ 下方为三国真实专利查询结果`]},
+    {n:'⑥ 物流友好',c:DC[5],v:dv[5],b:[`重量：${(k.logistics?.est_weight_lbs/2.205).toFixed(2)}kg ${k.logistics?.est_weight_lbs/2.205<0.5?'✅ 极轻':k.logistics?.est_weight_lbs/2.205<1.4?'🟡 良好':'⚠️ 较重'}`,`尺寸：${k.logistics?.est_dimensions||'--'}`,`危险品：${k.logistics?.is_hazmat?'⚠️ 是':'✅ 否'}`,`FBA：${k.logistics?.fba_friendly?'✅ 友好':'🟡 建议自发货'}`]},
+    {n:'⑦ 资金供应链',c:DC[6],v:dv[6],b:[`起订量：${k.supply_chain?.min_order_qty||'--'}件`,`1688单价：¥${k.supply_chain?.est_unit_cost_cny||'--'}`,`供应商：${k.supply_chain?.supplier_count_1688==='many'?'✅ 充足':'⚠️ '+k.supply_chain?.supplier_count_1688}`,`资金周转：约${k.supply_chain?.capital_cycle_days||'--'}天`]}
+  ];
+  const DOM_MAP={us:'amazon.com',ca:'amazon.ca',uk:'amazon.co.uk'};
+  const SITE_LABELS={us:'🇺🇸 US',ca:'🇨🇦 CA',uk:'🇬🇧 UK'};
+  document.getElementById('rightBody').innerHTML=`
+<div style="font-size:16px;font-weight:600;margin-bottom:2px">${k.keyword}</div>
+<div style="font-size:11px;color:var(--t3);margin-bottom:4px">${k.keyword_zh||''}</div>
+<div style="font-size:10px;color:var(--t3);margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+  <span>${SITE_LABELS[k.site]||k.site}</span><span>📦 ${k.category}</span>
+  <span style="color:${k.data_source==='demo'?'var(--t3)':'var(--gold)'}">${k.data_source==='demo'?'演示数据':'Claude AI分析'}</span>
+</div>
+${k.why_this?`<div style="background:rgba(232,70,10,.05);border:1px solid rgba(232,70,10,.2);border-radius:6px;padding:9px 11px;margin-bottom:10px;font-size:11px;color:var(--t2);line-height:1.6"><strong style="color:var(--accent)">💡 推荐理由：</strong>${k.why_this}</div>`:''}
+${radar(dv)}
+<div style="background:var(--s2);border-radius:6px;padding:9px;margin-bottom:10px">
+  <div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);font-family:'Space Mono',monospace;margin-bottom:7px">成本拆解估算</div>
+  <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1);font-size:11px"><span style="color:var(--t2)">售价</span><span style="font-family:monospace">${k.currency||'$'}${price}</span></div>
+  <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1);font-size:11px"><span style="color:var(--t2)">1688采购</span><span style="font-family:monospace;color:var(--red)">-$${cost}</span></div>
+  <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1);font-size:11px"><span style="color:var(--t2)">FBA费用</span><span style="font-family:monospace;color:var(--red)">-$${fba}</span></div>
+  <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1);font-size:11px"><span style="color:var(--t2)">亚马逊佣金15%</span><span style="font-family:monospace;color:var(--red)">-$${ref.toFixed(2)}</span></div>
+  <div style="display:flex;justify-content:space-between;padding:5px 0 0;font-size:11px;font-weight:600"><span style="color:var(--t2)">净利润估算</span><span style="font-family:monospace;color:${+net>0?'var(--green)':'var(--red)'}">${k.currency||'$'}${net} (~${(m*100).toFixed(0)}%)</span></div>
+</div>
+${dims.map((d,i)=>`<div class="dd" id="dd${i}">
+  <div class="dd-hd" onclick="tDD(${i})">
+    <div style="width:7px;height:7px;border-radius:50%;background:${d.c};flex-shrink:0"></div>
+    <div style="font-size:11px;font-weight:500;flex:1;color:${d.c}">${d.n}</div>
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:${d.c};margin-right:3px">${d.v}</div>
+    <div class="dd-arr">›</div>
+  </div>
+  <div class="dd-body">
+    <div style="height:3px;background:var(--b1);border-radius:2px;overflow:hidden;margin-bottom:7px"><div style="height:100%;width:${d.v}%;background:${d.c};border-radius:2px"></div></div>
+    <ul style="list-style:none">${d.b.map(b=>`<li style="font-size:11px;color:var(--t2);margin-bottom:3px;padding-left:11px;position:relative;line-height:1.5"><span style="position:absolute;left:0;color:var(--t3)">·</span>${b}</li>`).join('')}</ul>
+  </div>
+</div>`).join('')}
+<div id="patentSection" style="margin-bottom:10px">
+  <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);font-family:'Space Mono',monospace;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+    🔍 三国专利实时查询
+    <div style="flex:1;height:1px;background:var(--b1)"></div>
+    <span id="patentStatusBadge" style="font-size:9px;padding:1px 6px;background:rgba(41,121,255,.1);color:var(--blue);border:1px solid rgba(41,121,255,.2);border-radius:3px">查询中...</span>
+  </div>
+  <div id="patentUS" class="patent-sec"><div class="patent-hd" onclick="this.parentElement.classList.toggle('open')"><span class="patent-hd-flag">🇺🇸</span><span class="patent-hd-title">美国 USPTO</span><span class="patent-hd-count risk-loading" id="cnt-US">查询中</span><span class="patent-hd-arr">›</span></div><div class="patent-body"><div style="font-size:10px;color:var(--t3)">⏳ 连接 USPTO PatentSearch API...</div></div></div>
+  <div id="patentGB" class="patent-sec"><div class="patent-hd" onclick="this.parentElement.classList.toggle('open')"><span class="patent-hd-flag">🇬🇧</span><span class="patent-hd-title">英国 EPO/GB</span><span class="patent-hd-count risk-loading" id="cnt-GB">查询中</span><span class="patent-hd-arr">›</span></div><div class="patent-body"><div style="font-size:10px;color:var(--t3)">⏳ 连接 EPO OPS API...</div></div></div>
+  <div id="patentCA" class="patent-sec"><div class="patent-hd" onclick="this.parentElement.classList.toggle('open')"><span class="patent-hd-flag">🇨🇦</span><span class="patent-hd-title">加拿大 EPO/CA</span><span class="patent-hd-count risk-loading" id="cnt-CA">查询中</span><span class="patent-hd-arr">›</span></div><div class="patent-body"><div style="font-size:10px;color:var(--t3)">⏳ 连接 EPO OPS API...</div></div></div>
+</div>
+<div style="background:rgba(232,70,10,.04);border:1px solid rgba(232,70,10,.18);border-radius:6px;padding:9px;margin-bottom:8px">
+  <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">🎯 下一步行动</div>
+  <div style="display:flex;gap:6px;font-size:11px;color:var(--t2);margin-bottom:5px;line-height:1.5"><span style="color:var(--accent);font-weight:700;flex-shrink:0">①</span>1688搜"${k.keyword_zh||k.keyword}"，联系3-5家供应商报价</div>
+  <div style="display:flex;gap:6px;font-size:11px;color:var(--t2);margin-bottom:5px;line-height:1.5"><span style="color:var(--accent);font-weight:700;flex-shrink:0">②</span>Amazon FBA Calculator 精确核算成本</div>
+  <div style="display:flex;gap:6px;font-size:11px;color:var(--t2);margin-bottom:5px;line-height:1.5"><span style="color:var(--accent);font-weight:700;flex-shrink:0">③</span>分析竞品差评，验证"${(k.competition?.main_pain_points||['--'])[0]}"是否普遍</div>
+  <div style="display:flex;gap:6px;font-size:11px;color:var(--t2);line-height:1.5"><span style="color:var(--accent);font-weight:700;flex-shrink:0">④</span>${k.differentiation_strategy||'参考上方差异化建议'}</div>
+</div>
+<div style="display:flex;gap:6px;margin-top:8px">
+  <a href="https://www.${DOM_MAP[k.site]}/s?k=${encodeURIComponent(k.keyword)}" target="_blank" style="flex:1">
+    <button style="width:100%;padding:7px 10px;background:var(--accent);border:none;border-radius:5px;color:#fff;font-size:11px;cursor:pointer;font-family:'Noto Sans SC',sans-serif">🔗 亚马逊搜索 ${SITE_LABELS[k.site]||k.site}</button>
+  </a>
+  <button onclick="copyTxt('${k.keyword.replace(/'/g,"\'")}')" style="padding:7px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:5px;color:var(--t2);font-size:11px;cursor:pointer">📋</button>
+</div>`;
+  [0,1,2].forEach(i=>tDD(i,true));
+}
+
+// ═══ searchAndRenderPatents：三国专利查询并渲染 ═══
+async function searchAndRenderPatents(keyword){
+  const results = await searchPatents(keyword);
+  for(const [country, data] of Object.entries(results)){
+    const cntEl = document.getElementById('cnt-'+country);
+    const secEl = document.getElementById('patent'+country);
+    if(!cntEl||!secEl) continue;
+    const bodyEl = secEl.querySelector('.patent-body');
+    if(!bodyEl) continue;
+    if(data.no_worker){
+      cntEl.className='patent-hd-count risk-mid';cntEl.textContent='未配置';
+      bodyEl.innerHTML=`<div style="font-size:10px;color:var(--t3)">配置 Worker 后可查询真实专利<br><a href="${data.query_url}" target="_blank" class="patent-search-link">🔗 手动搜索 ${country}</a></div>`;
+      continue;
+    }
+    const total = data.total;
+    const rc = total===null?'risk-mid':total===0?'risk-low':total<5?'risk-mid':'risk-high';
+    const rt = total===null?'查询失败':total===0?'✅ 0条':total<5?`⚠ ${total}条`:`🔴 ${total}条`;
+    cntEl.className='patent-hd-count '+rc; cntEl.textContent=rt;
+    let html='';
+    if(data.error&&!data.patents?.length){html=`<div style="font-size:10px;color:var(--red)">出错：${data.error}</div>`;}
+    else if(!total||!data.patents?.length){html='<div class="patent-ok">✅ 未检索到相关专利，侵权风险较低。</div>';}
+    else{
+      html+=(total>=5?`<div class="patent-warning">⚠️ 检索到 ${total} 条相关专利，建议委托专业律师分析。</div>`:`<div class="patent-ok">检索到 ${total} 条，请逐一核查是否与你的产品冲突。</div>`);
+      html+=`<div class="patent-source">来源：${data.source||'官方数据库'}</div>`;
+      for(const p of (data.patents||[]).slice(0,5)){
+        html+=`<div class="patent-item"><div class="patent-item-title"><a href="${p.url}" target="_blank">${p.title||p.id}</a></div><div class="patent-item-meta"><span>${p.id}</span><span>${p.date||''}</span><span>${p.assignee||''}</span></div></div>`;
+      }
+      if(total>5) html+=`<div style="font-size:10px;color:var(--t3);padding-top:4px">还有 ${total-5} 条...</div>`;
+    }
+    html+=`<a href="${data.query_url}" target="_blank" class="patent-search-link">🔗 在官方数据库查看完整结果</a>`;
+    bodyEl.innerHTML=html;
+  }
+  const badge=document.getElementById('patentStatusBadge');
+  if(badge){
+    const tots=[results.US?.total,results.GB?.total,results.CA?.total].filter(t=>t!=null);
+    const mx=tots.length?Math.max(...tots):null;
+    if(mx===null){badge.textContent='未配置';badge.style.cssText='font-size:9px;padding:1px 6px;background:rgba(255,179,0,.1);color:var(--gold);border:1px solid rgba(255,179,0,.2);border-radius:3px'}
+    else if(mx===0){badge.textContent='✅ 无风险';badge.style.cssText='font-size:9px;padding:1px 6px;background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2);border-radius:3px'}
+    else if(mx<5){badge.textContent=`⚠ 共${tots.reduce((a,b)=>a+b,0)}条`;badge.style.cssText='font-size:9px;padding:1px 6px;background:rgba(255,179,0,.1);color:var(--gold);border:1px solid rgba(255,179,0,.2);border-radius:3px'}
+    else{badge.textContent=`🔴 共${tots.reduce((a,b)=>a+b,0)}条`;badge.style.cssText='font-size:9px;padding:1px 6px;background:rgba(255,23,68,.1);color:var(--red);border:1px solid rgba(255,23,68,.2);border-radius:3px'}
+  }
+}
+
+
+</script>
+</body>
+</html>
