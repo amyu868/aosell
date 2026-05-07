@@ -4,203 +4,812 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AoSell · Listing Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--pu:#7c3aed;--pu-lt:#ede9fe;--pu-dk:#5b21b6;--gr:#16a34a;--gr-lt:#dcfce7;--am:#b45309;--am-lt:#fef3c7;--re:#dc2626;--re-lt:#fee2e2;--bg:#f5f3ff;--card:#fff;--border:#e5e7eb;--text:#1f2937;--text2:#6b7280;--text3:#9ca3af;--rad:10px;--rads:6px}
+:root{
+  --ink:#0f1117;--ink2:#3d4352;--ink3:#8892a4;
+  --paper:#f7f8fc;--card:#ffffff;
+  --line:#e8eaf0;--line2:#d0d4de;
+  --accent:#2563eb;--accent-lt:#eff4ff;--accent-dk:#1d4ed8;
+  --green:#059669;--green-lt:#ecfdf5;
+  --amber:#d97706;--amber-lt:#fffbeb;
+  --red:#dc2626;--red-lt:#fef2f2;
+  --purple:#7c3aed;--purple-lt:#f5f3ff;
+  --r:10px;--rs:6px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:var(--text);background:var(--bg);min-height:100vh}
-.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:100;gap:10px}
-.logo{font-size:15px;font-weight:700;color:var(--pu);display:flex;align-items:center;gap:7px;white-space:nowrap;text-decoration:none}
-.back-btn{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:16px;cursor:pointer;background:transparent;color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:4px}
-.back-btn:hover{background:var(--pu-lt);color:var(--pu-dk);border-color:var(--pu)}
-.nav{display:flex;gap:3px;flex-wrap:wrap}
-.ntab{font-size:11px;padding:4px 10px;border-radius:16px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text2);white-space:nowrap}
-.ntab:hover{background:var(--pu-lt);color:var(--pu-dk);border-color:var(--pu)}
-.ntab.on{background:var(--pu);color:#fff;border-color:var(--pu)}
-.api-bar{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.adot{width:8px;height:8px;border-radius:50%;background:#d1d5db;flex-shrink:0}
-.adot.ok{background:var(--gr)}
-.astat{font-size:11px;color:var(--text2)}
-.page{display:none;padding:12px 14px}
+body{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:10px}
+
+/* ── TOP BAR ── */
+.bar{height:56px;background:var(--card);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:100}
+.logo{font-size:16px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.logo-star{width:28px;height:28px;background:var(--accent);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;color:white;font-size:14px}
+.nav{display:flex;gap:2px;margin-left:8px}
+.ntab{font-size:13px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;
+  background:transparent;color:var(--ink2);font-weight:400;transition:all .15s;font-family:'DM Sans',sans-serif}
+.ntab:hover{background:var(--paper);color:var(--ink)}
+.ntab.on{background:var(--accent-lt);color:var(--accent);font-weight:500}
+.bar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.api-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--ink3);cursor:pointer}
+.api-pill:hover{border-color:var(--accent);color:var(--accent)}
+.dot{width:7px;height:7px;border-radius:50%;background:#d1d5db;flex-shrink:0}
+.dot.ok{background:var(--green)}
+
+/* ── PAGES ── */
+.page{display:none;padding:16px 20px;max-width:1400px;margin:0 auto}
 .page.on{display:block}
-.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:11px}
-.col{display:flex;flex-direction:column;gap:10px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--rad);padding:13px}
-.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid #f3f4f6;gap:6px;flex-wrap:wrap}
-.ct{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
-.brow{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-label{display:block;font-size:11px;color:var(--text2);margin-bottom:3px}
-input,select,textarea{width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--rads);background:#fafafa;color:var(--text);resize:vertical;transition:border .15s}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pu);background:#fff}
-textarea{line-height:1.5}
-.mb8{margin-bottom:8px}
-.r2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
-.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:8px}
-.r4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-bottom:8px}
-.bai{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:5px 9px;border:1px solid var(--border);border-radius:var(--rads);background:#fff;color:var(--text);cursor:pointer}
-.bai:hover{background:var(--pu-lt);border-color:var(--pu);color:var(--pu-dk)}
-.ic{width:14px;height:14px;background:var(--pu);border-radius:3px;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.bgr{font-size:11px;padding:4px 8px;border:1px solid var(--gr);border-radius:var(--rads);background:transparent;color:var(--gr);cursor:pointer}
-.bgr:hover{background:var(--gr-lt)}
-.bam{font-size:11px;padding:4px 8px;border:1px solid var(--am);border-radius:var(--rads);background:transparent;color:var(--am);cursor:pointer}
-.bam:hover{background:var(--am-lt)}
-.bxs{font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:var(--rads);background:transparent;color:var(--text2);cursor:pointer}
-.bxs:hover{background:#f3f4f6}
-.bpri{width:100%;padding:10px;background:var(--pu);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
-.bpri:hover{background:var(--pu-dk)}
-.chips{display:flex;gap:4px;flex-wrap:wrap}
-.chip{font-size:11px;padding:3px 8px;border-radius:12px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text2)}
-.chip.on{background:var(--pu-lt);color:var(--pu-dk);border-color:var(--pu)}
-.badge{font-size:10px;padding:2px 6px;border-radius:7px;background:var(--pu-lt);color:var(--pu-dk);cursor:pointer;border:none}
-.badge:hover{background:#ddd6fe}
-.obox{background:#fafafa;border:1px solid var(--border);border-radius:var(--rads);padding:8px;min-height:40px;font-size:12px;line-height:1.6;color:var(--text)}
-.obox.tall{min-height:74px}
-.char{font-size:10px;color:var(--text3);text-align:right;margin-top:2px}
-.ig4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:5px}
-.ig3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px}
-.slot{aspect-ratio:1;border:1.5px dashed var(--border);border-radius:var(--rads);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;font-size:9px;color:var(--text3);text-align:center;padding:3px;overflow:hidden;transition:border .15s}
-.slot:hover{border-color:var(--pu);color:var(--pu)}
-.stag{font-size:9px;padding:1px 5px;border-radius:6px;background:var(--pu-lt);color:var(--pu-dk);margin-bottom:2px}
-.stag.gr{background:var(--gr-lt);color:#166534}
-.slot img{width:100%;height:100%;object-fit:cover;border-radius:4px}
-.brow-item{display:flex;gap:5px;margin-bottom:5px;align-items:flex-start}
-.bdot{width:5px;height:5px;border-radius:50%;background:var(--pu);flex-shrink:0;margin-top:6px}
-.spin{display:inline-block;width:12px;height:12px;border:2px solid #e9d5ff;border-top-color:var(--pu);border-radius:50%;animation:sp .7s linear infinite}
+
+/* ── MAIN GRID ── */
+.mgrid{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:16px}
+.col{display:flex;flex-direction:column;gap:14px}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card-head{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.card-title{font-size:13px;font-weight:600;color:var(--ink2);
+  text-transform:uppercase;letter-spacing:.5px}
+.card-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ── FORM ── */
+.field{margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:5px}
+input,select,textarea{
+  width:100%;font-size:13px;font-family:'DM Sans',sans-serif;
+  padding:8px 11px;border:1px solid var(--line2);border-radius:var(--rs);
+  background:#fff;color:var(--ink);resize:vertical;
+  transition:border-color .15s,box-shadow .15s;
+}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+textarea{line-height:1.6}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.r4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+
+/* ── TAGS ── */
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:12px;padding:4px 10px;border-radius:16px;
+  border:1px solid var(--line2);cursor:pointer;background:white;
+  color:var(--ink2);transition:all .15s;font-family:'DM Sans',sans-serif}
+.tag:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-lt)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  padding:7px 14px;border-radius:var(--rs);cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .15s;border:1px solid transparent;white-space:nowrap}
+.btn-primary{background:var(--accent);color:white;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-dk)}
+.btn-outline{background:white;color:var(--ink2);border-color:var(--line2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-green{background:transparent;color:var(--green);border-color:var(--green)}
+.btn-green:hover{background:var(--green-lt)}
+.btn-amber{background:transparent;color:var(--amber);border-color:var(--amber)}
+.btn-amber:hover{background:var(--amber-lt)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:11px}
+
+/* ── OUTPUT BOXES ── */
+.obox{background:var(--paper);border:1px solid var(--line);border-radius:var(--rs);
+  padding:12px;min-height:46px;font-size:13px;line-height:1.7;color:var(--ink);
+  cursor:text;transition:border .15s}
+.obox:focus{outline:none;border-color:var(--accent);background:white}
+.obox.tall{min-height:90px}
+.obox.xlarge{min-height:120px}
+.char{font-size:11px;color:var(--ink3);text-align:right;margin-top:4px;
+  font-family:'DM Mono',monospace}
+.bull{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
+.bull-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
+  flex-shrink:0;margin-top:7px}
+
+/* ── LANG TOGGLE ── */
+.lang-toggle{display:flex;background:var(--paper);border:1px solid var(--line);
+  border-radius:20px;padding:2px;gap:2px}
+.lang-btn{font-size:12px;padding:3px 10px;border-radius:16px;cursor:pointer;
+  border:none;background:transparent;color:var(--ink3);font-family:'DM Sans',sans-serif}
+.lang-btn.on{background:white;color:var(--accent);font-weight:500;
+  box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* ── CHIPS (model select) ── */
+.chip-row{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12px;padding:4px 10px;border-radius:14px;
+  border:1px solid var(--line2);cursor:pointer;background:white;color:var(--ink2)}
+.chip.on{background:var(--accent-lt);color:var(--accent);border-color:var(--accent)}
+
+/* ── SPINNER ── */
+.spin{display:inline-block;width:14px;height:14px;
+  border:2px solid var(--line2);border-top-color:var(--accent);
+  border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.hist-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rads);margin-bottom:5px;cursor:pointer}
-.hist-item:hover{background:#f9f5ff;border-color:var(--pu)}
-.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.scard{background:#f9f5ff;border-radius:var(--rads);padding:10px;text-align:center}
-.snum{font-size:20px;font-weight:700;color:var(--pu)}
-.slbl{font-size:10px;color:var(--text2);margin-top:2px}
-.chkrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6}
-.chkic{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
-.pass{background:var(--gr-lt);color:#166534}
-.fail{background:var(--re-lt);color:#991b1b}
-.platcard{border:1px solid var(--border);border-radius:var(--rads);padding:10px;margin-bottom:8px}
-.kwtag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:7px;background:var(--pu-lt);color:var(--pu-dk);margin:2px;cursor:pointer}
-.kwtag.hot{background:var(--re-lt);color:#991b1b}
-.seclbl{font-size:11px;font-weight:600;color:var(--text2);margin:8px 0 5px}
-.setup-box{background:#f9f5ff;border:1px solid #ddd6fe;border-radius:var(--rad);padding:18px;margin-bottom:12px}
-.setup-title{font-size:15px;font-weight:700;color:var(--pu-dk);margin-bottom:5px}
-.setup-sub{font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6}
-.mopts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.mopt{font-size:11px;padding:4px 11px;border-radius:12px;border:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text2)}
-.mopt.on{background:var(--pu);color:#fff;border-color:var(--pu)}
-.tip{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--rads);padding:8px 10px;font-size:11px;color:#92400e;line-height:1.5;margin-top:8px}
+
+/* ── IMAGE SLOTS ── */
+.ig4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.ig3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.slot{aspect-ratio:1;border:1.5px dashed var(--line2);border-radius:var(--rs);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;font-size:10px;color:var(--ink3);text-align:center;
+  padding:4px;overflow:hidden;transition:all .15s}
+.slot:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-lt)}
+.stag{font-size:9px;padding:2px 6px;border-radius:6px;
+  background:var(--accent-lt);color:var(--accent);margin-bottom:3px;font-weight:500}
+.stag.gr{background:var(--green-lt);color:var(--green)}
+.slot img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+
+/* ── HISTORY / SKU ── */
+.hist-item{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border:1px solid var(--line);border-radius:var(--rs);
+  margin-bottom:6px;cursor:pointer;transition:all .15s}
+.hist-item:hover{border-color:var(--accent);background:var(--accent-lt)}
+.sku-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;
+  gap:8px;align-items:center;margin-bottom:6px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat-card{background:var(--accent-lt);border-radius:var(--rs);padding:14px;text-align:center}
+.stat-num{font-size:24px;font-weight:600;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--ink3);margin-top:3px}
+.chkrow{display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--line)}
+.chk{width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.pass{background:var(--green-lt);color:var(--green)}
+.fail{background:var(--red-lt);color:var(--red)}
+.kwtag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:10px;
+  background:var(--accent-lt);color:var(--accent);margin:2px;cursor:pointer}
+.kwtag.hot{background:var(--red-lt);color:var(--red)}
+.seclbl{font-size:12px;font-weight:600;color:var(--ink2);margin:10px 0 6px}
+.platcard{border:1px solid var(--line);border-radius:var(--rs);padding:12px;margin-bottom:10px}
+
+/* ── API SETUP ── */
+.setup-box{background:linear-gradient(135deg,#eff4ff 0%,#f5f3ff 100%);
+  border:1px solid #c7d7fe;border-radius:var(--r);padding:22px;margin-bottom:16px}
+.setup-title{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.setup-sub{font-size:13px;color:var(--ink2);margin-bottom:18px;line-height:1.6}
+.tip{background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--rs);
+  padding:10px 14px;font-size:12px;color:var(--amber);line-height:1.6;margin-top:10px}
+
+/* ── SECTION DIVIDER ── */
+.sec-div{height:1px;background:var(--line);margin:16px 0}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div style="display:flex;align-items:center;gap:10px">
-    <a href="index.html" class="back-btn">← 首页</a>
-    <a href="index.html" class="logo">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      AoSell · Listing Pro
-    </a>
+
+<!-- TOP BAR -->
+<div class="bar">
+  <div class="logo">
+    <div class="logo-star">✦</div>
+    AoSell · Listing Pro
   </div>
   <div class="nav">
-    <button class="ntab on" onclick="showPage('main',this)">🛠 工作台</button>
-    <button class="ntab" onclick="showPage('history',this)">📋 历史</button>
-    <button class="ntab" onclick="showPage('sku',this)">📦 SKU变体</button>
-    <button class="ntab" onclick="showPage('competitor',this)">🔍 竞品分析</button>
-    <button class="ntab" onclick="showPage('compliance',this)">✅ 合规检查</button>
-    <button class="ntab" onclick="showPage('multiplatform',this)">🌐 多平台</button>
-    <button class="ntab" onclick="showPage('settings',this)">⚙️ API设置</button>
+    <button class="ntab on" onclick="showPage('main',this)">工作台</button>
+    <button class="ntab" onclick="showPage('history',this)">历史记录</button>
+    <button class="ntab" onclick="showPage('sku',this)">SKU 变体</button>
+    <button class="ntab" onclick="showPage('competitor',this)">竞品分析</button>
+    <button class="ntab" onclick="showPage('compliance',this)">合规检查</button>
+    <button class="ntab" onclick="showPage('multiplatform',this)">多平台适配</button>
+    <button class="ntab" onclick="showPage('settings',this)">API 设置</button>
   </div>
-  <div class="api-bar">
-    <div class="adot" id="adot"></div>
-    <span class="astat" id="astat">未配置 API</span>
+  <div class="bar-right">
+    <div class="api-pill" onclick="showPage('settings',null);document.querySelectorAll('.ntab')[6].classList.add('on')">
+      <div class="dot" id="adot"></div>
+      <span id="astat">未配置 API</span>
+    </div>
   </div>
 </div>
+
+<!-- ═══ PAGE: 工作台 ═══ -->
 <div id="page-main" class="page on">
 <div class="mgrid">
+
+<!-- LEFT -->
 <div class="col">
   <div class="card">
-    <div class="ch"><span class="ct">产品信息</span><div class="chips" id="lang-chips"><div class="chip on" onclick="setLang('en',this)">EN</div><div class="chip" onclick="setLang('zh',this)">中文</div><div class="chip" onclick="setLang('bi',this)">双语</div></div></div>
-    <div class="mb8"><label>核心关键词（逗号分隔）</label><input id="kw" placeholder="wireless earbuds, noise cancelling, bluetooth 5.0"/></div>
-    <div class="r3"><div><label>品牌</label><input id="brand" placeholder="SoundMax"/></div><div><label>类别</label><input id="cat" placeholder="Electronics"/></div><div><label>目标市场</label><input id="tgt" placeholder="Commuters"/></div></div>
-    <div class="r4"><div><label>长(in)</label><input id="dl" type="number" placeholder="5"/></div><div><label>宽(in)</label><input id="dw" type="number" placeholder="3"/></div><div><label>高(in)</label><input id="dh" type="number" placeholder="2"/></div><div><label>重量(lbs)</label><input id="dwt" type="number" placeholder="0.5"/></div></div>
-    <div class="r2"><div><label>颜色</label><input id="col" placeholder="Black"/></div><div><label>材质</label><input id="mat" placeholder="ABS Plastic"/></div></div>
-    <div class="mb8"><label>核心卖点 Features</label><textarea id="feat" style="min-height:54px" placeholder="30h battery, IPX5 waterproof, touch controls..."></textarea></div>
-    <div><label>快速标签</label><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px"><button class="badge" onclick="addKw('waterproof')">防水</button><button class="badge" onclick="addKw('wireless')">无线</button><button class="badge" onclick="addKw('foldable')">可折叠</button><button class="badge" onclick="addKw('fast charging')">快充</button><button class="badge" onclick="addKw('compact')">便携</button><button class="badge" onclick="addKw('eco-friendly')">环保</button><button class="badge" onclick="addKw('gift ready')">礼品</button><button class="badge" onclick="addKw('premium quality')">优质</button></div></div>
+    <div class="card-head">
+      <span class="card-title">产品信息</span>
+      <div class="lang-toggle">
+        <button class="lang-btn on" id="ln-en" onclick="setLang('en',this)">EN</button>
+        <button class="lang-btn" id="ln-zh" onclick="setLang('zh',this)">中文</button>
+        <button class="lang-btn" id="ln-bi" onclick="setLang('bi',this)">双语</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>核心关键词 <span style="font-size:11px;color:var(--ink3);font-weight:400">（逗号分隔，越详细越好）</span></label>
+      <input id="kw" placeholder="例：wireless earbuds, noise cancelling, bluetooth 5.0"/>
+    </div>
+
+    <div class="r3">
+      <div><label>品牌名称</label><input id="brand" placeholder="SoundMax"/></div>
+      <div><label>产品类别</label><input id="cat" placeholder="Electronics"/></div>
+      <div><label>目标市场</label><input id="tgt" placeholder="Commuters"/></div>
+    </div>
+
+    <div class="r4">
+      <div><label>长 (in)</label><input id="dl" type="number" placeholder="5.0"/></div>
+      <div><label>宽 (in)</label><input id="dw" type="number" placeholder="3.0"/></div>
+      <div><label>高 (in)</label><input id="dh" type="number" placeholder="2.0"/></div>
+      <div><label>重量 (lbs)</label><input id="dwt" type="number" placeholder="0.5"/></div>
+    </div>
+
+    <div class="r2">
+      <div><label>颜色</label><input id="col" placeholder="Midnight Black"/></div>
+      <div><label>材质</label><input id="mat" placeholder="Premium ABS"/></div>
+    </div>
+
+    <div class="field">
+      <label>核心卖点 Features</label>
+      <textarea id="feat" style="min-height:70px" placeholder="例：30h battery life, IPX5 waterproof, USB-C fast charging, touch controls, active noise cancellation..."></textarea>
+      <div class="tags" style="margin-top:8px">
+        <button class="tag" onclick="addFeat('waterproof')">防水</button>
+        <button class="tag" onclick="addFeat('wireless')">无线</button>
+        <button class="tag" onclick="addFeat('foldable')">可折叠</button>
+        <button class="tag" onclick="addFeat('fast charging')">快充</button>
+        <button class="tag" onclick="addFeat('compact design')">便携</button>
+        <button class="tag" onclick="addFeat('eco-friendly')">环保</button>
+        <button class="tag" onclick="addFeat('gift ready packaging')">礼品包装</button>
+        <button class="tag" onclick="addFeat('premium quality materials')">优质材料</button>
+        <button class="tag" onclick="addFeat('multi-color available')">多色可选</button>
+        <button class="tag" onclick="addFeat('easy to use')">易于使用</button>
+      </div>
+    </div>
   </div>
+
   <div class="card">
-    <div class="ch"><span class="ct">AI 生成文案</span><div class="brow"><button class="bgr" onclick="exportXLSX()">Excel</button><button class="bgr" onclick="exportTXT()">TXT</button><button class="bam" onclick="exportJSON()">JSON</button></div></div>
-    <button class="bai mb8" onclick="genListing()"><div class="ic">✦</div> 一键生成标题 + 五点 + 描述</button>
-    <label>标题 <span style="font-size:10px;color:var(--text3)">≤200字符</span></label>
-    <div class="obox" id="o-title" contenteditable="true">—</div><div class="char" id="c-title">0/200</div>
-    <label style="margin-top:8px">五点特性 Bullet Points</label>
-    <div class="obox tall" id="o-bullets">—</div>
-    <label style="margin-top:8px">产品描述 <span style="font-size:10px;color:var(--text3)">≤2000字符</span></label>
-    <div class="obox tall" id="o-desc" contenteditable="true">—</div><div class="char" id="c-desc">0/2000</div>
-    <label style="margin-top:8px">搜索关键词 <span style="font-size:10px;color:var(--text3)">≤500字符</span></label>
-    <div class="obox" id="o-terms" contenteditable="true">—</div>
+    <div class="card-head">
+      <span class="card-title">AI 生成文案</span>
+      <div class="card-actions">
+        <button class="btn btn-green btn-sm" onclick="exportXLSX()">↓ Excel</button>
+        <button class="btn btn-green btn-sm" onclick="exportTXT()">↓ TXT</button>
+        <button class="btn btn-amber btn-sm" onclick="exportJSON()">↓ JSON</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="genListing()" style="margin-bottom:16px">
+      ✦ 一键生成标题 + 五点特性 + 描述
+    </button>
+
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <label style="margin:0">标题 Title</label>
+        <span style="font-size:11px;color:var(--ink3)">≤200字符</span>
+      </div>
+      <div class="obox" id="o-title" contenteditable="true">—</div>
+      <div class="char" id="c-title">0 / 200</div>
+    </div>
+
+    <div class="field">
+      <label>五点特性 Bullet Points</label>
+      <div class="obox tall" id="o-bullets">—</div>
+    </div>
+
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <label style="margin:0">产品描述 Description</label>
+        <span style="font-size:11px;color:var(--ink3)">≤2000字符</span>
+      </div>
+      <div class="obox xlarge" id="o-desc" contenteditable="true">—</div>
+      <div class="char" id="c-desc">0 / 2000</div>
+    </div>
+
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <label style="margin:0">搜索关键词 Search Terms</label>
+        <span style="font-size:11px;color:var(--ink3)">≤500字符</span>
+      </div>
+      <div class="obox" id="o-terms" contenteditable="true">—</div>
+    </div>
   </div>
 </div>
+
+<!-- RIGHT -->
 <div class="col">
   <div class="card">
-    <div class="ch"><span class="ct">参考图上传（1–7张）</span><div class="chips" id="imgmod-chips"><div class="chip on" onclick="setImgMod('dalle3',this)">DALL-E 3</div><div class="chip" onclick="setImgMod('sd',this)">SD</div><div class="chip" onclick="setImgMod('mj',this)">MJ API</div></div></div>
+    <div class="card-head">
+      <span class="card-title">参考图上传（1–7张）</span>
+      <div class="chip-row" id="imgmod-chips">
+        <div class="chip on" onclick="setImgMod('dalle3',this)">DALL-E 3</div>
+        <div class="chip" onclick="setImgMod('sd',this)">SD</div>
+        <div class="chip" onclick="setImgMod('mj',this)">MJ API</div>
+        <div class="chip" onclick="setImgMod('custom',this)">自定义</div>
+      </div>
+    </div>
+    <div id="cimg-row" style="display:none;margin-bottom:10px">
+      <label>自定义图像 API 地址</label>
+      <input id="img-api-url" placeholder="https://your-image-api.com/generate"/>
+    </div>
     <div class="ig4" id="up-grid"></div>
-    <div style="margin-top:8px"><label>场景提示词</label><textarea id="scene" style="min-height:42px" placeholder="white background, front view, soft shadow..."></textarea></div>
+    <div class="field" style="margin-top:12px">
+      <label>场景提示词 / Scene Prompt</label>
+      <textarea id="scene" style="min-height:52px" placeholder="例：white background, front view, soft natural shadow, Amazon main image compliant..."></textarea>
+    </div>
   </div>
+
   <div class="card">
-    <div class="ch"><span class="ct">AI 主图（7张 · 1000×1000px）</span><div class="brow"><button class="bai" onclick="genImages()"><div class="ic">✦</div> 生成</button><button class="bgr" onclick="alert('对接图像API后自动打包ZIP')">导出ZIP</button></div></div>
+    <div class="card-head">
+      <span class="card-title">AI 主图生成（7张 · 1000×1000px）</span>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="genImages()">✦ 生成</button>
+        <button class="btn btn-green btn-sm" onclick="alert('对接图像API后自动打包ZIP下载')">↓ 导出ZIP</button>
+      </div>
+    </div>
     <div class="ig4" id="main-grid"></div>
   </div>
+
   <div class="card">
-    <div class="ch"><span class="ct">A+ 图片（6张）</span><div class="brow"><div class="chips" id="tpl-chips"><div class="chip on" onclick="setTpl('standard',this)">标准</div><div class="chip" onclick="setTpl('luxury',this)">奢品</div><div class="chip" onclick="setTpl('tech',this)">科技</div><div class="chip" onclick="setTpl('lifestyle',this)">生活</div><div class="chip" onclick="setTpl('compare',this)">对比</div></div><button class="bai" onclick="genAplus()"><div class="ic">✦</div> 生成</button><button class="bgr" onclick="alert('对接图像API后自动打包')">导出</button></div></div>
+    <div class="card-head">
+      <span class="card-title">A+ 图片（6张）</span>
+      <div class="card-actions">
+        <div class="chip-row" id="tpl-chips">
+          <div class="chip on" onclick="setTpl('standard',this)">标准</div>
+          <div class="chip" onclick="setTpl('luxury',this)">奢品</div>
+          <div class="chip" onclick="setTpl('tech',this)">科技</div>
+          <div class="chip" onclick="setTpl('lifestyle',this)">生活</div>
+          <div class="chip" onclick="setTpl('compare',this)">对比</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="genAplus()">✦ 生成</button>
+        <button class="btn btn-green btn-sm" onclick="alert('对接图像API后自动打包下载')">↓ 导出</button>
+      </div>
+    </div>
     <div class="ig3" id="aplus-grid"></div>
   </div>
-  <button class="bpri" onclick="genAll()">✦ 一键全部生成</button>
+
+  <button class="btn btn-primary btn-full" style="font-size:15px;padding:13px" onclick="genAll()">
+    ✦ 一键全部生成（文案 + 主图 + A+图片）
+  </button>
+</div>
+
 </div>
 </div>
+
+<!-- ═══ PAGE: 历史记录 ═══ -->
+<div id="page-history" class="page">
+  <div class="card" style="max-width:900px;margin:0 auto">
+    <div class="card-head">
+      <span class="card-title">生成历史（最近10条）</span>
+      <button class="btn btn-outline btn-sm" onclick="clearHistory()">清空全部</button>
+    </div>
+    <div id="hist-list"><div style="color:var(--ink3);padding:20px 0;text-align:center;font-size:14px">暂无历史记录</div></div>
+  </div>
 </div>
-<div id="page-history" class="page"><div class="card" style="max-width:860px;margin:0 auto"><div class="ch"><span class="ct">生成历史（最近10条）</span><button class="bxs" onclick="clearHistory()">清空</button></div><div id="hist-list"><div style="color:var(--text3);padding:16px 0;text-align:center">暂无历史</div></div></div></div>
-<div id="page-sku" class="page"><div class="card" style="max-width:860px;margin:0 auto"><div class="ch"><span class="ct">SKU 变体</span><div class="brow"><button class="bai" onclick="addSKU()"><div class="ic">+</div> 添加</button><button class="bai" onclick="genAllSKU()"><div class="ic">✦</div> 批量生成</button><button class="bgr" onclick="exportSKUXLSX()">导出</button></div></div><div class="sgrid"><div class="scard"><div class="snum" id="sku-count">0</div><div class="slbl">变体数</div></div><div class="scard"><div class="snum" id="sku-done">0</div><div class="slbl">已生成</div></div><div class="scard"><div class="snum" id="sku-export">0</div><div class="slbl">可导出</div></div></div><div id="sku-rows"></div><div id="sku-titles"></div></div></div>
-<div id="page-competitor" class="page"><div class="card" style="max-width:860px;margin:0 auto"><div class="ch"><span class="ct">竞品关键词分析</span><button class="bai" onclick="analyzeComp()"><div class="ic">✦</div> 分析</button></div><div class="r2 mb8"><div><label>ASIN 1</label><input id="asin1" placeholder="B08N5WRWNW"/></div><div><label>ASIN 2</label><input id="asin2" placeholder="B09G9FPHY6"/></div></div><div class="r2 mb8"><div><label>ASIN 3</label><input id="asin3" placeholder="B07XJ8C8F5"/></div><div><label>ASIN 4</label><input id="asin4"/></div></div><div id="comp-result"><div style="color:var(--text3);padding:12px 0">输入竞品 ASIN 并点击分析</div></div></div></div>
-<div id="page-compliance" class="page"><div class="card" style="max-width:860px;margin:0 auto"><div class="ch"><span class="ct">合规检查</span><button class="bai" onclick="runCompliance()"><div class="ic">✦</div> 检查</button></div><div id="compliance-result"><div style="color:var(--text3);padding:12px 0">点击检查</div></div></div></div>
-<div id="page-multiplatform" class="page"><div class="card" style="max-width:860px;margin:0 auto"><div class="ch"><span class="ct">多平台适配</span><button class="bai" onclick="genMultiPlatform()"><div class="ic">✦</div> 一键适配</button></div><div id="plat-result"><div style="color:var(--text3);padding:12px 0">请先生成文案</div></div></div></div>
-<div id="page-settings" class="page"><div style="max-width:580px;margin:0 auto"><div class="setup-box"><div class="setup-title">⚙️ API 配置</div><div class="setup-sub">API Key 仅保存在浏览器本地，不上传到任何服务器。推荐 MiniMax：<a href="https://platform.minimaxi.com" target="_blank" style="color:var(--pu)">platform.minimaxi.com</a></div><label style="margin-bottom:5px">选择服务商</label><div class="mopts" id="provider-opts"><div class="mopt on" onclick="setProvider('minimax',this)">MiniMax（推荐）</div><div class="mopt" onclick="setProvider('anthropic',this)">Anthropic Claude</div><div class="mopt" onclick="setProvider('openai',this)">OpenAI GPT</div><div class="mopt" onclick="setProvider('custom',this)">自定义</div></div><div id="custom-url-row" style="display:none;margin-bottom:8px"><label>API 地址</label><input id="custom-api-url" placeholder="https://..."/></div><div style="margin-bottom:8px"><label>模型名称</label><input id="model-name" placeholder="MiniMax-Text-01"/></div><div style="margin-bottom:12px"><label>API Key</label><input id="api-key-input" type="password" placeholder="输入 API Key"/></div><button class="bpri" onclick="saveApiConfig()" style="margin-bottom:10px">保存配置</button><div id="save-msg" style="font-size:12px;color:var(--gr);display:none">✓ 已保存</div><div class="tip">💡 MiniMax：platform.minimaxi.com → API密钥 → 创建 → 复制<br>模型填：MiniMax-Text-01</div></div></div></div>
+
+<!-- ═══ PAGE: SKU变体 ═══ -->
+<div id="page-sku" class="page">
+  <div class="card" style="max-width:900px;margin:0 auto">
+    <div class="card-head">
+      <span class="card-title">SKU 变体批量管理</span>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="addSKU()">+ 添加变体</button>
+        <button class="btn btn-outline btn-sm" onclick="genAllSKU()">✦ 批量生成标题</button>
+        <button class="btn btn-green btn-sm" onclick="exportSKUXLSX()">↓ 导出 Excel</button>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="sku-count">0</div><div class="stat-lbl">已添加变体</div></div>
+      <div class="stat-card"><div class="stat-num" id="sku-done">0</div><div class="stat-lbl">已生成标题</div></div>
+      <div class="stat-card"><div class="stat-num" id="sku-export">0</div><div class="stat-lbl">可导出</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;padding:0 4px;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:500;color:var(--ink3)">颜色</span>
+      <span style="font-size:12px;font-weight:500;color:var(--ink3)">尺码</span>
+      <span style="font-size:12px;font-weight:500;color:var(--ink3)">库存</span>
+      <span style="font-size:12px;font-weight:500;color:var(--ink3)">价格($)</span>
+      <span></span>
+    </div>
+    <div id="sku-rows"></div>
+    <div id="sku-titles" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: 竞品分析 ═══ -->
+<div id="page-competitor" class="page">
+  <div class="card" style="max-width:900px;margin:0 auto">
+    <div class="card-head">
+      <span class="card-title">竞品关键词分析</span>
+      <button class="btn btn-primary btn-sm" onclick="analyzeComp()">✦ 开始分析</button>
+    </div>
+    <div class="r2" style="margin-bottom:0">
+      <div class="field"><label>竞品 ASIN 1</label><input id="asin1" placeholder="B08N5WRWNW"/></div>
+      <div class="field"><label>竞品 ASIN 2</label><input id="asin2" placeholder="B09G9FPHY6"/></div>
+    </div>
+    <div class="r2">
+      <div class="field"><label>竞品 ASIN 3</label><input id="asin3" placeholder="B07XJ8C8F5"/></div>
+      <div class="field"><label>竞品 ASIN 4（可选）</label><input id="asin4" placeholder=""/></div>
+    </div>
+    <div id="comp-result"><div style="color:var(--ink3);padding:14px 0;font-size:13px">输入竞品 ASIN 并点击分析，提取高频关键词</div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: 合规检查 ═══ -->
+<div id="page-compliance" class="page">
+  <div class="card" style="max-width:900px;margin:0 auto">
+    <div class="card-head">
+      <span class="card-title">亚马逊上架合规检查</span>
+      <button class="btn btn-primary btn-sm" onclick="runCompliance()">✦ 开始检查</button>
+    </div>
+    <div id="compliance-result"><div style="color:var(--ink3);padding:14px 0;font-size:13px">点击检查，自动校验文案是否符合亚马逊规范</div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: 多平台适配 ═══ -->
+<div id="page-multiplatform" class="page">
+  <div class="card" style="max-width:900px;margin:0 auto">
+    <div class="card-head">
+      <span class="card-title">多平台文案适配</span>
+      <button class="btn btn-primary btn-sm" onclick="genMultiPlatform()">✦ 一键适配全平台</button>
+    </div>
+    <div style="font-size:13px;color:var(--ink3);margin-bottom:14px">自动转换为 Shopify / Etsy / TikTok Shop / eBay / Walmart 各平台格式</div>
+    <div id="plat-result"><div style="color:var(--ink3);padding:14px 0;font-size:13px">请先在工作台生成文案，再点击适配</div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: API 设置 ═══ -->
+<div id="page-settings" class="page">
+  <div style="max-width:600px;margin:0 auto">
+    <div class="setup-box">
+      <div class="setup-title">⚙️ API 配置</div>
+      <div class="setup-sub">
+        API Key 仅保存在你的浏览器本地，不会上传到任何服务器，完全安全。<br>
+        推荐使用 MiniMax：<a href="https://platform.minimaxi.com" target="_blank" style="color:var(--accent)">platform.minimaxi.com</a> → 登录 → 左侧「API 密钥」→ 创建并复制。
+      </div>
+
+      <div class="field"><label>选择 AI 服务商</label>
+        <div class="chip-row" id="provider-opts">
+          <div class="chip on" onclick="setProvider('minimax',this)">MiniMax（推荐）</div>
+          <div class="chip" onclick="setProvider('anthropic',this)">Anthropic Claude</div>
+          <div class="chip" onclick="setProvider('openai',this)">OpenAI GPT</div>
+          <div class="chip" onclick="setProvider('custom',this)">自定义</div>
+        </div>
+      </div>
+
+      <div id="custom-url-row" style="display:none" class="field">
+        <label>自定义 API 地址</label>
+        <input id="custom-api-url" placeholder="https://your-api.com/v1/chat/completions"/>
+      </div>
+
+      <div class="field"><label>模型名称</label>
+        <input id="model-name" placeholder="MiniMax-Text-01"/>
+      </div>
+
+      <div class="field"><label>API Key（仅保存在本地浏览器）</label>
+        <input id="api-key-input" type="password" placeholder="粘贴你的 API Key"/>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="saveApiConfig()">保存配置</button>
+      <div id="save-msg" style="font-size:13px;color:var(--green);margin-top:8px;display:none">✓ 配置已保存，刷新后仍有效</div>
+
+      <div class="tip">
+        💡 MiniMax API Key 获取步骤：<br>
+        1. 打开 platform.minimaxi.com → 注册/登录<br>
+        2. 左侧菜单 「API 密钥」→ 点击「创建新密钥」<br>
+        3. 复制密钥粘贴到上方输入框<br>
+        4. 模型名称填：<strong>MiniMax-Text-01</strong>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">图像 API 配置（可选）</span></div>
+      <div class="field"><label>图像生成 API 地址</label>
+        <input id="img-api-cfg" placeholder="https://api.openai.com/v1/images/generations"/>
+      </div>
+      <div class="field"><label>图像 API Key</label>
+        <input id="img-api-key" type="password" placeholder="图像生成服务的 API Key"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="saveImgConfig()">保存图像配置</button>
+      <div id="img-save-msg" style="font-size:13px;color:var(--green);margin-top:8px;display:none">✓ 图像配置已保存</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const $=id=>document.getElementById(id);
 let curLang='en',curImgMod='dalle3',curTpl='standard',curProvider='minimax';
 let listingData={title:'',bullets:[],description:'',searchTerms:''};
 let skuList=[],skuDone=0;
+
 (function boot(){loadApiConfig();buildUpGrid();buildMainGrid();buildAplusGrid();renderSKU();})();
-function showPage(p,el){document.querySelectorAll('.page').forEach(e=>e.classList.remove('on'));document.querySelectorAll('.ntab').forEach(e=>e.classList.remove('on'));$('page-'+p).classList.add('on');if(el)el.classList.add('on');if(p==='history')renderHistory();}
-function saveApiConfig(){const cfg={provider:curProvider,model:$('model-name').value,key:$('api-key-input').value,customUrl:$('custom-api-url').value};localStorage.setItem('aosell_api',JSON.stringify(cfg));updateApiStatus(!!cfg.key);$('save-msg').style.display='block';setTimeout(()=>$('save-msg').style.display='none',3000);}
-function loadApiConfig(){const raw=localStorage.getItem('aosell_api');if(!raw)return;try{const c=JSON.parse(raw);curProvider=c.provider||'minimax';if($('model-name'))$('model-name').value=c.model||'';if($('api-key-input'))$('api-key-input').value=c.key||'';updateApiStatus(!!c.key);}catch(e){}}
-function updateApiStatus(ok){$('adot').className='adot'+(ok?' ok':'');$('astat').textContent=ok?'API 已配置 ✓':'未配置 API';}
-function setProvider(p,el){curProvider=p;document.querySelectorAll('#provider-opts .mopt').forEach(e=>e.classList.remove('on'));if(el)el.classList.add('on');$('custom-url-row').style.display=p==='custom'?'block':'none';const m={minimax:'MiniMax-Text-01',anthropic:'claude-sonnet-4-20250514',openai:'gpt-4o',custom:''};$('model-name').value=m[p]||'';}
+
+function showPage(p,el){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(e=>e.classList.remove('on'));
+  $('page-'+p).classList.add('on');
+  if(el)el.classList.add('on');
+  if(p==='history')renderHistory();
+  if(p==='sku'){renderSKU();}
+}
+
+// ── API Config ──────────────────────────
+function saveApiConfig(){
+  const cfg={provider:curProvider,model:$('model-name').value,key:$('api-key-input').value,customUrl:$('custom-api-url').value};
+  localStorage.setItem('aosell_api',JSON.stringify(cfg));
+  updateApiStatus(!!cfg.key);
+  $('save-msg').style.display='block';
+  setTimeout(()=>$('save-msg').style.display='none',3000);
+}
+function saveImgConfig(){
+  localStorage.setItem('aosell_img',JSON.stringify({url:$('img-api-cfg').value,key:$('img-api-key').value}));
+  $('img-save-msg').style.display='block';
+  setTimeout(()=>$('img-save-msg').style.display='none',3000);
+}
+function loadApiConfig(){
+  const raw=localStorage.getItem('aosell_api');
+  if(!raw)return;
+  try{
+    const c=JSON.parse(raw);
+    curProvider=c.provider||'minimax';
+    if($('model-name'))$('model-name').value=c.model||'';
+    if($('api-key-input'))$('api-key-input').value=c.key||'';
+    if($('custom-api-url'))$('custom-api-url').value=c.customUrl||'';
+    document.querySelectorAll('#provider-opts .chip').forEach(e=>e.classList.remove('on'));
+    const m=document.querySelector(`#provider-opts .chip[onclick*="${curProvider}"]`);
+    if(m)m.classList.add('on');
+    updateApiStatus(!!c.key);
+  }catch(e){}
+}
+function updateApiStatus(ok){
+  $('adot').className='dot'+(ok?' ok':'');
+  $('astat').textContent=ok?'API 已配置 ✓':'未配置 API';
+}
+function setProvider(p,el){
+  curProvider=p;
+  document.querySelectorAll('#provider-opts .chip').forEach(e=>e.classList.remove('on'));
+  if(el)el.classList.add('on');
+  $('custom-url-row').style.display=p==='custom'?'block':'none';
+  const m={minimax:'MiniMax-Text-01',anthropic:'claude-sonnet-4-20250514',openai:'gpt-4o',custom:''};
+  $('model-name').value=m[p]||'';
+}
+
+// ── Helpers ──────────────────────────────
+// 快速标签 → 核心卖点（修复bug）
+function addFeat(w){const el=$('feat');el.value=el.value?(el.value+', '+w):w;}
+// 关键词标签 → 核心关键词（竞品分析用）
 function addKw(w){const el=$('kw');el.value=el.value?(el.value+', '+w):w;}
-function setLang(l,el){curLang=l;document.querySelectorAll('#lang-chips .chip').forEach(e=>e.classList.remove('on'));if(el)el.classList.add('on');}
-function setImgMod(m,el){curImgMod=m;document.querySelectorAll('#imgmod-chips .chip').forEach(e=>e.classList.remove('on'));if(el)el.classList.add('on');}
+function setLang(l,el){curLang=l;document.querySelectorAll('.lang-btn').forEach(e=>e.classList.remove('on'));if(el)el.classList.add('on');}
+function setImgMod(m,el){curImgMod=m;document.querySelectorAll('#imgmod-chips .chip').forEach(e=>e.classList.remove('on'));if(el)el.classList.add('on');$('cimg-row').style.display=m==='custom'?'block':'none';}
 function setTpl(t,el){curTpl=t;document.querySelectorAll('#tpl-chips .chip').forEach(e=>e.classList.remove('on'));if(el)el.classList.add('on');buildAplusGrid();}
-function buildUpGrid(){const g=$('up-grid');g.innerHTML='';['主图','副图2','副图3','副图4','副图5','副图6','副图7'].forEach(lb=>{const d=document.createElement('div');d.className='slot';d.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span style="margin-top:2px">${lb}</span>`;d.onclick=()=>trigUp(d);g.appendChild(d);});}
-function buildMainGrid(){const g=$('main-grid');g.innerHTML='';const dl=$('dl').value||'?',dw=$('dw').value||'?',dh=$('dh').value||'?';[['白底主图','1000×1000'],['白底副图','1000×1000'],[`尺寸 ${dl}"×${dw}"×${dh}"`,'1000×1000'],['尺寸侧面','1000×1000'],['场景图1','1000×1000'],['场景图2','1000×1000'],['生活场景','1000×1000']].forEach(([lb,sz])=>{const d=document.createElement('div');d.className='slot';d.innerHTML=`<div class="stag">${lb}</div><div style="font-size:8px;color:var(--text3)">${sz}</div>`;g.appendChild(d);});}
-function buildAplusGrid(){const g=$('aplus-grid');g.innerHTML='';const tpls={standard:[['Banner','970×300'],['产品展示','600×450'],['核心卖点','600×450'],['使用场景','600×450'],['对比图','600×450'],['品牌故事','970×300']],luxury:[['品牌大图','970×300'],['质感细节','600×450'],['生活方式','600×450'],['材质展示','600×450'],['系列搭配','600×450'],['品牌愿景','970×300']],tech:[['产品全景','970×300'],['技术参数','600×450'],['功能演示','600×450'],['对比测试','600×450'],['兼容设备','600×450'],['用户评价','970×300']],lifestyle:[['场景大图','970×300'],['使用人群','600×450'],['日常场景1','600×450'],['日常场景2','600×450'],['礼品推荐','600×450'],['品牌理念','970×300']],compare:[['产品对比','970×300'],['功能对比','600×450'],['价值对比','600×450'],['用户评价','600×450'],['售后服务','600×450'],['行动号召','970×300']]};(tpls[curTpl]||tpls.standard).forEach(([lb,sz])=>{const d=document.createElement('div');d.className='slot';d.innerHTML=`<div class="stag gr">${lb}</div><div style="font-size:8px;color:var(--text3)">${sz}</div>`;g.appendChild(d);});}
-function trigUp(slot){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);slot.innerHTML=`<img src="${url}"/>`;};inp.click();}
-async function callAI(prompt,maxTok=1200){const raw=localStorage.getItem('aosell_api');if(!raw){alert('请先在 API设置 配置 Key');return '';}const cfg=JSON.parse(raw);if(!cfg.key){alert('请先配置 API Key');return '';}const provider=cfg.provider||'minimax';const model=cfg.model||'MiniMax-Text-01';let url,headers,body;if(provider==='minimax'){url='https://api.minimaxi.com/v1/text/chatcompletion_v2';headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`};body=JSON.stringify({model,messages:[{role:'user',content:prompt}],max_tokens:maxTok});}else if(provider==='anthropic'){url='https://api.anthropic.com/v1/messages';headers={'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01'};body=JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content:prompt}]});}else{url=provider==='openai'?'https://api.openai.com/v1/chat/completions':cfg.customUrl;headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`};body=JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content:prompt}]});}try{const r=await fetch(url,{method:'POST',headers,body});const d=await r.json();if(provider==='anthropic')return d.content&&d.content[0]?d.content[0].text:'';return d.choices&&d.choices[0]?d.choices[0].message.content:'';}catch(e){console.error(e);return '';}}
-async function genListing(){const kw=$('kw').value;if(!kw){alert('请输入核心关键词');return;}const langI=curLang==='en'?'Output in English only.':curLang==='zh'?'Output in Simplified Chinese only.':'Output each field in BOTH English AND Chinese separated by " | ".';$('o-title').innerHTML='<span class="spin"></span>';$('o-bullets').innerHTML='<span class="spin"></span>';$('o-desc').innerHTML='<span class="spin"></span>';$('o-terms').innerHTML='<span class="spin"></span>';const prompt=`Amazon listing copywriter. ${langI}\nReturn ONLY valid JSON: {"title":string,"bullets":array5,"description":string,"searchTerms":string}\nProduct: Keywords=${kw}|Brand=${$('brand').value||'N/A'}|Category=${$('cat').value||'General'}|Features=${$('feat').value||'N/A'}|Dims=${$('dl').value||'?'}x${$('dw').value||'?'}x${$('dh').value||'?'}in ${$('dwt').value||'?'}lbs|Color=${$('col').value}|Material=${$('mat').value}|Target=${$('tgt').value}\nRules: title≤200, bullets≤700 each benefit-first, desc≤2000 engaging, searchTerms≤500 space-separated.`;const raw=await callAI(prompt);if(!raw){$('o-title').textContent='生成失败，请检查 API';return;}let data;try{data=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){$('o-title').textContent='解析失败，请重试';return;}listingData=data;const t=data.title||'';$('o-title').textContent=t;$('c-title').textContent=`${t.length}/200`;if(data.bullets)$('o-bullets').innerHTML=data.bullets.map(b=>`<div class="brow-item"><div class="bdot"></div><span>${b}</span></div>`).join('');const desc=data.description||'';$('o-desc').textContent=desc;$('c-desc').textContent=`${desc.length}/2000`;$('o-terms').textContent=data.searchTerms||'';saveHistory();}
-function genImages(){buildMainGrid();$('main-grid').querySelectorAll('.slot').forEach(s=>{s.innerHTML+=`<div style="font-size:8px;color:var(--pu);margin-top:2px">${curImgMod} ✓</div>`;});}
-function genAplus(){buildAplusGrid();$('aplus-grid').querySelectorAll('.slot').forEach(s=>{s.innerHTML+=`<div style="font-size:8px;color:var(--gr);margin-top:2px">✓</div>`;});}
+
+// ── Build grids ──────────────────────────
+function buildUpGrid(){
+  const g=$('up-grid');g.innerHTML='';
+  ['主图','副图2','副图3','副图4','副图5','副图6','副图7'].forEach(lb=>{
+    const d=document.createElement('div');d.className='slot';
+    d.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>${lb}</span>`;
+    d.onclick=()=>trigUp(d);g.appendChild(d);
+  });
+}
+function buildMainGrid(){
+  const g=$('main-grid');g.innerHTML='';
+  const dl=$('dl').value||'?',dw=$('dw').value||'?',dh=$('dh').value||'?';
+  [['白底主图','1000×1000'],['白底副图','1000×1000'],[`尺寸 ${dl}"×${dw}"×${dh}"`,'标注图'],['尺寸侧面','标注图'],['场景图1','1000×1000'],['场景图2','1000×1000'],['生活场景','1000×1000']].forEach(([lb,sz])=>{
+    const d=document.createElement('div');d.className='slot';
+    d.innerHTML=`<div class="stag">${lb}</div><div style="font-size:9px;color:var(--ink3)">${sz}</div>`;
+    g.appendChild(d);
+  });
+}
+function buildAplusGrid(){
+  const g=$('aplus-grid');g.innerHTML='';
+  const tpls={
+    standard:[['Banner 横幅','970×300'],['产品展示','600×450'],['核心卖点','600×450'],['使用场景','600×450'],['对比图','600×450'],['品牌故事','970×300']],
+    luxury:[['品牌大图','970×300'],['质感细节','600×450'],['生活方式','600×450'],['材质展示','600×450'],['系列搭配','600×450'],['品牌愿景','970×300']],
+    tech:[['产品全景','970×300'],['技术参数','600×450'],['功能演示','600×450'],['对比测试','600×450'],['兼容设备','600×450'],['用户评价','970×300']],
+    lifestyle:[['场景大图','970×300'],['使用人群','600×450'],['日常场景1','600×450'],['日常场景2','600×450'],['礼品推荐','600×450'],['品牌理念','970×300']],
+    compare:[['产品对比','970×300'],['功能对比','600×450'],['价值对比','600×450'],['用户评价','600×450'],['售后服务','600×450'],['行动号召','970×300']]
+  };
+  (tpls[curTpl]||tpls.standard).forEach(([lb,sz])=>{
+    const d=document.createElement('div');d.className='slot';
+    d.innerHTML=`<div class="stag gr">${lb}</div><div style="font-size:9px;color:var(--ink3)">${sz}</div>`;
+    g.appendChild(d);
+  });
+}
+function trigUp(slot){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=e=>{const f=e.target.files[0];if(!f)return;slot.innerHTML=`<img src="${URL.createObjectURL(f)}"/>`;};
+  inp.click();
+}
+
+// ── AI Call ──────────────────────────────
+async function callAI(prompt,maxTok=1200){
+  const raw=localStorage.getItem('aosell_api');
+  if(!raw){alert('请先在「API 设置」页面配置 API Key');return '';}
+  const cfg=JSON.parse(raw);
+  if(!cfg.key){alert('请先在「API 设置」页面输入 API Key');return '';}
+  const provider=cfg.provider||'minimax';
+  const model=cfg.model||'MiniMax-Text-01';
+  let url,headers,body;
+  if(provider==='minimax'){
+    url='https://api.minimaxi.com/v1/text/chatcompletion_v2';
+    headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`};
+    body=JSON.stringify({model,messages:[{role:'user',content:prompt}],max_tokens:maxTok});
+  }else if(provider==='anthropic'){
+    url='https://api.anthropic.com/v1/messages';
+    headers={'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01'};
+    body=JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content:prompt}]});
+  }else{
+    url=provider==='openai'?'https://api.openai.com/v1/chat/completions':(cfg.customUrl||'');
+    headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`};
+    body=JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content:prompt}]});
+  }
+  try{
+    const r=await fetch(url,{method:'POST',headers,body});
+    const d=await r.json();
+    if(provider==='anthropic')return d.content?.[0]?.text||'';
+    return d.choices?.[0]?.message?.content||'';
+  }catch(e){console.error(e);return '';}
+}
+
+// ── Gen Listing ──────────────────────────
+async function genListing(){
+  const kw=$('kw').value;
+  if(!kw){alert('请输入核心关键词');return;}
+  const langI=curLang==='en'?'Output in English only.':curLang==='zh'?'Output in Simplified Chinese only.':'Output each field in BOTH English AND Chinese separated by " | ".';
+  $('o-title').innerHTML='<span class="spin"></span>';
+  $('o-bullets').innerHTML='<span class="spin"></span>';
+  $('o-desc').innerHTML='<span class="spin"></span>';
+  $('o-terms').innerHTML='<span class="spin"></span>';
+  const prompt=`You are an expert Amazon listing copywriter. ${langI}
+Return ONLY valid JSON (no markdown): {"title":string,"bullets":array_of_5_strings,"description":string,"searchTerms":string}
+Product: Keywords=${kw} | Brand=${$('brand').value||'N/A'} | Category=${$('cat').value||'General'} | Features=${$('feat').value||'N/A'} | Dims=${$('dl').value||'?'}x${$('dw').value||'?'}x${$('dh').value||'?'}in ${$('dwt').value||'?'}lbs | Color=${$('col').value||''} | Material=${$('mat').value||''} | Target=${$('tgt').value||'general'}
+Rules: title≤200chars keyword-rich brand first, each bullet≤700chars benefit-first embed keywords naturally, description≤2000chars engaging paragraph, searchTerms≤500chars space-separated no brand no repeats.`;
+  const raw=await callAI(prompt);
+  if(!raw){$('o-title').textContent='生成失败，请检查 API 配置';return;}
+  let data;
+  try{data=JSON.parse(raw.replace(/```json|```/g,'').trim());}
+  catch(e){$('o-title').textContent='解析失败，请重试';return;}
+  listingData=data;
+  const t=data.title||'';
+  $('o-title').textContent=t;$('c-title').textContent=`${t.length} / 200`;
+  if(data.bullets)$('o-bullets').innerHTML=data.bullets.map(b=>`<div class="bull"><div class="bull-dot"></div><span>${b}</span></div>`).join('');
+  const desc=data.description||'';
+  $('o-desc').textContent=desc;$('c-desc').textContent=`${desc.length} / 2000`;
+  $('o-terms').textContent=data.searchTerms||'';
+  saveHistory();
+}
+
+function genImages(){buildMainGrid();$('main-grid').querySelectorAll('.slot').forEach(s=>{s.innerHTML+=`<div style="font-size:9px;color:var(--accent);margin-top:3px;font-weight:500">${curImgMod} ✓</div>`;});}
+function genAplus(){buildAplusGrid();$('aplus-grid').querySelectorAll('.slot').forEach(s=>{s.innerHTML+=`<div style="font-size:9px;color:var(--green);margin-top:3px;font-weight:500">✓ 已生成</div>`;});}
 function genAll(){genListing();setTimeout(()=>{genImages();genAplus();},800);}
-function exportXLSX(){const{title,bullets,description,searchTerms}=listingData;const rows=[['Field','Value'],['Title',title||''],...((bullets||[]).map((b,i)=>[`Bullet ${i+1}`,b])),['Description',description||''],['Search Terms',searchTerms||''],['Brand',$('brand').value],['Category',$('cat').value]];const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:18},{wch:80}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,'Listing',ws);XLSX.writeFile(wb,'aosell_listing.xlsx');}
-function exportTXT(){const{title,bullets,description,searchTerms}=listingData;let t=`AMAZON LISTING\n${'─'.repeat(40)}\nTITLE:\n${title||''}\n\nBULLETS:\n`;(bullets||[]).forEach((b,i)=>t+=`${i+1}. ${b}\n`);t+=`\nDESCRIPTION:\n${description||''}\n\nSEARCH TERMS:\n${searchTerms||''}`;const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(t);a.download='listing.txt';a.click();}
-function exportJSON(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(listingData,null,2));a.download='listing.json';a.click();}
-function saveHistory(){if(!listingData.title)return;let h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');h.unshift({...listingData,brand:$('brand').value,kw:$('kw').value,ts:Date.now()});if(h.length>10)h=h.slice(0,10);localStorage.setItem('aosell_hist',JSON.stringify(h));}
-function renderHistory(){const h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');const el=$('hist-list');if(!h.length){el.innerHTML='<div style="color:var(--text3);padding:16px 0;text-align:center">暂无历史</div>';return;}el.innerHTML=h.map((r,i)=>`<div class="hist-item" onclick="loadHist(${i})"><div><div style="font-size:12px;font-weight:600">${(r.title||'').substring(0,65)}...</div><div style="font-size:10px;color:var(--text3)">${r.brand||''} · ${new Date(r.ts).toLocaleString()}</div></div><button class="bxs" onclick="event.stopPropagation();delHist(${i})">删除</button></div>`).join('');}
-function loadHist(i){const h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');const r=h[i];if(!r)return;listingData=r;$('kw').value=r.kw||'';$('brand').value=r.brand||'';$('o-title').textContent=r.title||'';if(r.bullets)$('o-bullets').innerHTML=r.bullets.map(b=>`<div class="brow-item"><div class="bdot"></div><span>${b}</span></div>`).join('');$('o-desc').textContent=r.description||'';$('o-terms').textContent=r.searchTerms||'';showPage('main',document.querySelectorAll('.ntab')[0]);}
+
+// ── Export ───────────────────────────────
+function exportXLSX(){
+  const{title,bullets,description,searchTerms}=listingData;
+  const rows=[['Field','Value'],['Title',title||''],...((bullets||[]).map((b,i)=>[`Bullet ${i+1}`,b])),['Description',description||''],['Search Terms',searchTerms||''],['Brand',$('brand').value],['Category',$('cat').value],['Dimensions',`${$('dl').value}x${$('dw').value}x${$('dh').value} in`],['Weight',$('dwt').value+' lbs'],['Color',$('col').value],['Material',$('mat').value]];
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:18},{wch:80}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,'Listing',ws);XLSX.writeFile(wb,'aosell_listing.xlsx');
+}
+function exportTXT(){
+  const{title,bullets,description,searchTerms}=listingData;
+  let t=`AMAZON LISTING — AoSell\n${'─'.repeat(50)}\n\nTITLE:\n${title||''}\n\nBULLET POINTS:\n`;
+  (bullets||[]).forEach((b,i)=>t+=`${i+1}. ${b}\n`);
+  t+=`\nDESCRIPTION:\n${description||''}\n\nSEARCH TERMS:\n${searchTerms||''}`;
+  const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(t);a.download='aosell_listing.txt';a.click();
+}
+function exportJSON(){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({...listingData,brand:$('brand').value,category:$('cat').value},null,2));
+  a.download='aosell_listing.json';a.click();
+}
+
+// ── History ──────────────────────────────
+function saveHistory(){
+  if(!listingData.title)return;
+  let h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');
+  h.unshift({...listingData,brand:$('brand').value,kw:$('kw').value,ts:Date.now()});
+  if(h.length>10)h=h.slice(0,10);
+  localStorage.setItem('aosell_hist',JSON.stringify(h));
+}
+function renderHistory(){
+  const h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');
+  const el=$('hist-list');
+  if(!h.length){el.innerHTML='<div style="color:var(--ink3);padding:20px 0;text-align:center;font-size:14px">暂无历史记录</div>';return;}
+  el.innerHTML=h.map((r,i)=>`<div class="hist-item" onclick="loadHist(${i})">
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px">${(r.title||'').substring(0,70)}${r.title&&r.title.length>70?'...':''}</div>
+      <div style="font-size:12px;color:var(--ink3)">${r.brand||''} · ${(r.kw||'').substring(0,40)} · ${new Date(r.ts).toLocaleString()}</div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();delHist(${i})">删除</button>
+  </div>`).join('');
+}
+function loadHist(i){
+  const h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');const r=h[i];if(!r)return;
+  listingData=r;$('brand').value=r.brand||'';$('kw').value=r.kw||'';
+  $('o-title').textContent=r.title||'';$('c-title').textContent=`${(r.title||'').length}/200`;
+  if(r.bullets)$('o-bullets').innerHTML=r.bullets.map(b=>`<div class="bull"><div class="bull-dot"></div><span>${b}</span></div>`).join('');
+  $('o-desc').textContent=r.description||'';$('o-terms').textContent=r.searchTerms||'';
+  showPage('main',document.querySelectorAll('.ntab')[0]);
+}
 function delHist(i){let h=JSON.parse(localStorage.getItem('aosell_hist')||'[]');h.splice(i,1);localStorage.setItem('aosell_hist',JSON.stringify(h));renderHistory();}
-function clearHistory(){if(confirm('确认清空？')){localStorage.removeItem('aosell_hist');renderHistory();}}
+function clearHistory(){if(confirm('确认清空全部历史？')){localStorage.removeItem('aosell_hist');renderHistory();}}
+
+// ── SKU ──────────────────────────────────
 function addSKU(){skuList.push({color:'',size:'',qty:'',price:'',title:''});renderSKU();}
-function renderSKU(){$('sku-count').textContent=skuList.length;$('sku-done').textContent=skuDone;$('sku-export').textContent=skuDone;$('sku-rows').innerHTML=skuList.map((s,i)=>`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:5px;margin-bottom:5px;align-items:center"><input style="font-size:11px" placeholder="颜色" value="${s.color}" oninput="skuList[${i}].color=this.value"/><input style="font-size:11px" placeholder="尺码" value="${s.size}" oninput="skuList[${i}].size=this.value"/><input style="font-size:11px" type="number" placeholder="库存" value="${s.qty}" oninput="skuList[${i}].qty=this.value"/><input style="font-size:11px" type="number" placeholder="价格" value="${s.price}" oninput="skuList[${i}].price=this.value"/><button class="bxs" onclick="skuList.splice(${i},1);renderSKU()">×</button></div>`).join('');}
-async function genAllSKU(){if(!skuList.length){alert('请先添加变体');return;}const kw=$('kw').value;if(!kw){alert('请先输入关键词');return;}skuDone=0;for(let i=0;i<skuList.length;i++){const s=skuList[i];const res=await callAI(`Amazon variant title ≤200 chars for: ${kw}, Color:${s.color}, Size:${s.size}. Return ONLY the title.`,200);skuList[i].title=(res||'').trim();skuDone++;renderSKU();}$('sku-titles').innerHTML='<div class="seclbl">已生成标题</div>'+skuList.filter(s=>s.title).map(s=>`<div style="font-size:11px;padding:5px 8px;background:#f9f5ff;border-radius:5px;margin-bottom:4px;color:var(--pu-dk)">${s.color} ${s.size} — ${s.title}</div>`).join('');}
-function exportSKUXLSX(){if(!skuList.length){alert('请先添加变体');return;}const rows=[['Color','Size','Qty','Price','Title'],...skuList.map(s=>[s.color,s.size,s.qty,s.price,s.title||''])];const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,'SKU',ws);XLSX.writeFile(wb,'sku.xlsx');}
-async function analyzeComp(){const asins=[$('asin1'),$('asin2'),$('asin3'),$('asin4')].map(e=>e.value).filter(Boolean);if(!asins.length){alert('请输入 ASIN');return;}const el=$('comp-result');el.innerHTML='<span class="spin"></span>';const raw=await callAI(`Amazon SEO analysis for ASINs: ${asins.join(',')} category "${$('cat').value}". Return ONLY JSON: {"highFreq":array10,"opportunities":array5,"avoid":array3,"summary":string}.`,600);let data;try{data=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){el.textContent='分析失败';return;}el.innerHTML=`<div class="seclbl">高频词（点击添加）</div><div>${(data.highFreq||[]).map(k=>`<span class="kwtag hot" onclick="addKw('${k}')">${k}</span>`).join('')}</div><div class="seclbl">机会词</div><div>${(data.opportunities||[]).map(k=>`<span class="kwtag">${k}</span>`).join('')}</div><div class="seclbl">建议避免</div><div>${(data.avoid||[]).map(k=>`<span class="kwtag" style="background:var(--re-lt);color:#991b1b">${k}</span>`).join('')}</div><div style="font-size:12px;color:var(--text2);padding:8px;background:#f9fafb;border-radius:6px;margin-top:8px">${data.summary||''}</div>`;}
-function runCompliance(){const t=listingData.title||'';const b=listingData.bullets||[];const desc=listingData.description||'';const checks=[{l:'标题≤200字符',p:t.length>0&&t.length<=200,d:`${t.length}字符`},{l:'标题无全大写',p:!/\b[A-Z]{4,}\b/.test(t),d:''},{l:'五点≥5条',p:b.length>=5,d:`${b.length}条`},{l:'每条≤700字符',p:b.length>0&&b.every(x=>x.length<=700),d:''},{l:'描述≤2000字符',p:desc.length<=2000&&desc.length>0,d:`${desc.length}字符`},{l:'关键词≤500字符',p:(listingData.searchTerms||'').length<=500,d:''},{l:'已填品牌',p:!!$('brand').value,d:''},{l:'已填尺寸',p:!!($('dl').value&&$('dw').value),d:''},{l:'已上传参考图',p:!!$('up-grid').querySelector('img'),d:''}];const pass=checks.filter(c=>c.p).length;$('compliance-result').innerHTML=`<div class="sgrid"><div class="scard"><div class="snum" style="color:var(--gr)">${pass}</div><div class="slbl">通过</div></div><div class="scard"><div class="snum" style="color:var(--re)">${checks.length-pass}</div><div class="slbl">未通过</div></div><div class="scard"><div class="snum">${Math.round(pass/checks.length*100)}%</div><div class="slbl">合规率</div></div></div>${checks.map(c=>`<div class="chkrow"><div class="chkic ${c.p?'pass':'fail'}">${c.p?'✓':'✗'}</div><span style="flex:1;font-size:12px">${c.l}</span><span style="font-size:10px;color:var(--text3)">${c.d}</span></div>`).join('')}`;}
-async function genMultiPlatform(){if(!listingData.title){alert('请先生成文案');return;}const el=$('plat-result');el.innerHTML='<span class="spin"></span>';const raw=await callAI(`Convert Amazon listing to 5 platforms. Return ONLY JSON array: [{"platform":string,"title":string,"description":string,"tags":string}]. Platforms: Shopify,Etsy,TikTok Shop,eBay,Walmart. Amazon: Title:"${listingData.title}" Desc:"${(listingData.description||'').substring(0,200)}".`,900);let data;try{data=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){el.textContent='适配失败';return;}el.innerHTML=data.map(pd=>`<div class="platcard"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;font-weight:600">${pd.platform}</span><button class="bgr" onclick="navigator.clipboard.writeText('${encodeURIComponent(pd.title+'\\n\\n'+pd.description)}');this.textContent='已复制';setTimeout(()=>this.textContent='复制',1500)">复制</button></div><div style="font-size:11px;font-weight:500;margin-bottom:3px">${pd.title||''}</div><div style="font-size:11px;color:var(--text2)">${(pd.description||'').substring(0,120)}...</div></div>`).join('');}
+function renderSKU(){
+  $('sku-count').textContent=skuList.length;$('sku-done').textContent=skuDone;$('sku-export').textContent=skuDone;
+  $('sku-rows').innerHTML=skuList.map((s,i)=>`<div class="sku-row">
+    <input style="font-size:13px" placeholder="颜色" value="${s.color}" oninput="skuList[${i}].color=this.value"/>
+    <input style="font-size:13px" placeholder="尺码" value="${s.size}" oninput="skuList[${i}].size=this.value"/>
+    <input style="font-size:13px" type="number" placeholder="库存" value="${s.qty}" oninput="skuList[${i}].qty=this.value"/>
+    <input style="font-size:13px" type="number" placeholder="价格" value="${s.price}" oninput="skuList[${i}].price=this.value"/>
+    <button class="btn btn-outline btn-sm" onclick="skuList.splice(${i},1);skuDone=Math.max(0,skuDone-1);renderSKU()">×</button>
+  </div>`).join('');
+  if(skuList.some(s=>s.title))
+    $('sku-titles').innerHTML='<div class="seclbl">已生成标题</div>'+skuList.filter(s=>s.title).map(s=>`<div style="font-size:13px;padding:7px 10px;background:var(--accent-lt);border-radius:6px;margin-bottom:5px;color:var(--accent-dk)">${s.color||''} ${s.size||''} — ${s.title}</div>`).join('');
+  else $('sku-titles').innerHTML='';
+}
+async function genAllSKU(){
+  if(!skuList.length){alert('请先添加变体');return;}
+  const kw=$('kw').value;if(!kw){alert('请先在工作台输入产品关键词');return;}
+  skuDone=0;
+  for(let i=0;i<skuList.length;i++){
+    const s=skuList[i];
+    const res=await callAI(`Generate a concise Amazon variant title (≤200 chars) for: ${kw}, Color:${s.color||'N/A'}, Size:${s.size||'N/A'}. Return ONLY the title string.`,200);
+    skuList[i].title=(res||'').trim();skuDone++;renderSKU();
+  }
+}
+function exportSKUXLSX(){
+  if(!skuList.length){alert('请先添加变体');return;}
+  const rows=[['Color','Size','Qty','Price($)','Generated Title'],...skuList.map(s=>[s.color,s.size,s.qty,s.price,s.title||''])];
+  const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,'SKU',ws);XLSX.writeFile(wb,'aosell_sku.xlsx');
+}
+
+// ── Competitor ───────────────────────────
+async function analyzeComp(){
+  const asins=[$('asin1'),$('asin2'),$('asin3'),$('asin4')].map(e=>e.value).filter(Boolean);
+  if(!asins.length){alert('请输入至少一个 ASIN');return;}
+  const el=$('comp-result');el.innerHTML='<span class="spin"></span> 分析中...';
+  const raw=await callAI(`Amazon SEO expert. Competitor ASINs: ${asins.join(',')} category "${$('cat').value||'General'}". Return ONLY JSON: {"highFreq":array10,"opportunities":array5,"avoid":array3,"summary":string}.`,600);
+  let data;try{data=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){el.textContent='分析失败，请重试';return;}
+  el.innerHTML=`<div class="seclbl">高频竞品关键词（点击添加到关键词）</div><div style="margin-bottom:10px">${(data.highFreq||[]).map(k=>`<span class="kwtag hot" onclick="addKw('${k}')">${k}</span>`).join('')}</div><div class="seclbl">差异化机会词</div><div style="margin-bottom:10px">${(data.opportunities||[]).map(k=>`<span class="kwtag">${k}</span>`).join('')}</div><div class="seclbl">建议避免词</div><div style="margin-bottom:10px">${(data.avoid||[]).map(k=>`<span class="kwtag" style="background:var(--red-lt);color:var(--red)">${k}</span>`).join('')}</div><div style="font-size:13px;color:var(--ink2);padding:12px;background:var(--paper);border-radius:var(--rs);line-height:1.7">${data.summary||''}</div>`;
+}
+
+// ── Compliance ───────────────────────────
+function runCompliance(){
+  const t=listingData.title||'';const b=listingData.bullets||[];const desc=listingData.description||'';
+  const checks=[
+    {l:'标题长度 ≤200字符',p:t.length>0&&t.length<=200,d:`当前 ${t.length} 字符`},
+    {l:'标题不含全大写词',p:!/\b[A-Z]{4,}\b/.test(t),d:'检测全大写词'},
+    {l:'五点特性已填写（5条）',p:b.length>=5,d:`当前 ${b.length} 条`},
+    {l:'每条要点 ≤700字符',p:b.length>0&&b.every(x=>x.length<=700),d:'逐条校验'},
+    {l:'产品描述 ≤2000字符且不为空',p:desc.length>0&&desc.length<=2000,d:`当前 ${desc.length} 字符`},
+    {l:'搜索关键词 ≤500字符',p:(listingData.searchTerms||'').length<=500,d:`当前 ${(listingData.searchTerms||'').length} 字符`},
+    {l:'已填写品牌名',p:!!$('brand').value,d:''},
+    {l:'已填写产品类别',p:!!$('cat').value,d:''},
+    {l:'已填写尺寸信息',p:!!($('dl').value&&$('dw').value&&$('dh').value),d:'长×宽×高'},
+    {l:'参考图已上传',p:!!$('up-grid').querySelector('img'),d:'检查上传区'},
+  ];
+  const pass=checks.filter(c=>c.p).length;
+  $('compliance-result').innerHTML=`<div class="stat-grid" style="margin-bottom:14px">
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${pass}</div><div class="stat-lbl">通过</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${checks.length-pass}</div><div class="stat-lbl">未通过</div></div>
+    <div class="stat-card"><div class="stat-num">${Math.round(pass/checks.length*100)}%</div><div class="stat-lbl">合规率</div></div>
+  </div>${checks.map(c=>`<div class="chkrow"><div class="chk ${c.p?'pass':'fail'}">${c.p?'✓':'✗'}</div><span style="flex:1;font-size:13px">${c.l}</span><span style="font-size:12px;color:var(--ink3)">${c.d}</span></div>`).join('')}`;
+}
+
+// ── Multi Platform ───────────────────────
+async function genMultiPlatform(){
+  if(!listingData.title){alert('请先在工作台生成文案');return;}
+  const el=$('plat-result');el.innerHTML='<span class="spin"></span> 适配中...';
+  const raw=await callAI(`Convert this Amazon listing to 5 platform versions. Return ONLY JSON array: [{"platform":string,"title":string,"description":string,"tags":string}]. Platforms: Shopify, Etsy, TikTok Shop, eBay, Walmart. Amazon: Title:"${listingData.title}" Desc:"${(listingData.description||'').substring(0,300)}".`,900);
+  let data;try{data=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){el.textContent='适配失败，请重试';return;}
+  el.innerHTML=data.map(pd=>`<div class="platcard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:14px;font-weight:600;color:var(--ink)">${pd.platform}</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-green btn-sm" onclick="copyText('${encodeURIComponent(pd.title+'\\n\\n'+pd.description)}',this)">复制</button>
+        <button class="btn btn-outline btn-sm" onclick="dlPlat('${pd.platform}','${encodeURIComponent(pd.title)}','${encodeURIComponent(pd.description)}')">下载</button>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:5px">${pd.title||''}</div>
+    <div style="font-size:12px;color:var(--ink2);line-height:1.6">${(pd.description||'').substring(0,150)}...</div>
+    ${pd.tags?`<div style="margin-top:8px">${pd.tags.split(',').slice(0,5).map(t=>`<span class="kwtag">${t.trim()}</span>`).join('')}</div>`:''}
+  </div>`).join('');
+}
+function copyText(enc,btn){navigator.clipboard.writeText(decodeURIComponent(enc));btn.textContent='已复制';setTimeout(()=>btn.textContent='复制',1500);}
+function dlPlat(plat,tE,dE){const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(`${plat}\n\nTitle: ${decodeURIComponent(tE)}\n\nDescription: ${decodeURIComponent(dE)}`);a.download=`${plat}_listing.txt`;a.click();}
 </script>
 </body>
 </html>
